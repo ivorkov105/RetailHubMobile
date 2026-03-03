@@ -1,0 +1,23 @@
+import kotlin.Boolean;
+
+CREATE TABLE RequestEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    clientSessionToken TEXT NOT NULL,
+    status TEXT NOT NULL,
+    departmentName TEXT,
+    consultantName TEXT,
+    canRemind INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    canReassign INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    assignedAt TEXT
+);
+
+getRequests:
+SELECT * FROM RequestEntity;
+
+insertRequest:
+INSERT OR REPLACE INTO RequestEntity(id, clientSessionToken, status, departmentName, consultantName, canRemind, canReassign, createdAt, assignedAt)
+VALUES ?;
+
+removeAllRequests:
+DELETE FROM RequestEntity;
