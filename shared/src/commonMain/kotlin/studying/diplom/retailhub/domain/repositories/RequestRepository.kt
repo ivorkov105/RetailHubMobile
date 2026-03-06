@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.domain.repositories
 
-import studying.diplom.retailhub.domain.models.RequestModel
+import studying.diplom.retailhub.domain.models.request.RequestModel
 
 interface RequestRepository {
     suspend fun getRequests(): Result<List<RequestModel>>

@@ -12,6 +12,23 @@ CREATE TABLE RequestEntity (
     assignedAt TEXT
 );
 
+CREATE TABLE StoreEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    timezone TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE DepartmentEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+-- Requests
 getRequests:
 SELECT * FROM RequestEntity;
 
@@ -21,3 +38,28 @@ VALUES ?;
 
 removeAllRequests:
 DELETE FROM RequestEntity;
+
+-- Store
+getStore:
+SELECT * FROM StoreEntity LIMIT 1;
+
+insertStore:
+INSERT OR REPLACE INTO StoreEntity(id, name, address, timezone, createdAt)
+VALUES ?;
+
+removeStore:
+DELETE FROM StoreEntity;
+
+-- Departments
+getDepartments:
+SELECT * FROM DepartmentEntity;
+
+insertDepartment:
+INSERT OR REPLACE INTO DepartmentEntity(id, storeId, name, description, createdAt)
+VALUES ?;
+
+removeDepartment:
+DELETE FROM DepartmentEntity WHERE id = ?;
+
+removeAllDepartments:
+DELETE FROM DepartmentEntity;

@@ -1,4 +1,4 @@
-package studying.diplom.retailhub.domain.models
+package studying.diplom.retailhub.domain.models.auth
 
 data class TokenModel(
     val accessToken: String,

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import studying.diplom.retailhub.domain.models.RequestModel
+import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.GetRequestsUseCase
 
 data class RequestsState(

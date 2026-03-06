@@ -5,8 +5,8 @@ import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
 import studying.diplom.retailhub.data.mappers.toModel
-import studying.diplom.retailhub.domain.models.TokenModel
-import studying.diplom.retailhub.domain.models.UserModel
+import studying.diplom.retailhub.domain.models.auth.TokenModel
+import studying.diplom.retailhub.domain.models.user.UserModel
 import studying.diplom.retailhub.domain.repositories.AuthRepository
 
 class AuthRepositoryImpl(
@@ -38,6 +38,10 @@ class AuthRepositoryImpl(
 
     override suspend fun getProfile(): Result<UserModel> {
         return apiClient.getMe().map { it.toModel() }
+    }
+
+    override fun isAuthorized(): Boolean {
+        return settings.getString(KEY_ACCESS_TOKEN, "").isNotEmpty()
     }
 
     private fun saveTokens(tokenEntity: TokenEntity) {

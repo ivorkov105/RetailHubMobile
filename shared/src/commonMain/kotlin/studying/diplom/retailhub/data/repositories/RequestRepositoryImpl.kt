@@ -2,9 +2,10 @@ package studying.diplom.retailhub.data.repositories
 
 import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.RemoteSource
+import studying.diplom.retailhub.data.mappers.toDbEntity
 import studying.diplom.retailhub.data.mappers.toModel
-import studying.diplom.retailhub.data.mappers.toEntity
-import studying.diplom.retailhub.domain.models.RequestModel
+import studying.diplom.retailhub.data.mappers.toApiEntity
+import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.domain.repositories.RequestRepository
 
 class RequestRepositoryImpl(
@@ -16,15 +17,16 @@ class RequestRepositoryImpl(
         val remoteResult = remoteSource.getRequests()
         
         return remoteResult.fold(
-            onSuccess = { entities ->
-                val domainModels = entities.map { it.toModel() }
-                localSource.updateRequests(domainModels)
-                Result.success(domainModels)
+            onSuccess = { apiEntities ->
+                val dbEntities = apiEntities.map { it.toDbEntity() }
+                localSource.updateRequests(dbEntities)
+                
+                Result.success(apiEntities.map { it.toModel() })
             },
             onFailure = { 
                 val localData = localSource.getRequests()
                 if (localData.isNotEmpty()) {
-                    Result.success(localData)
+                    Result.success(localData.map { it.toModel() })
                 } else {
                     Result.failure(it)
                 }
@@ -33,8 +35,7 @@ class RequestRepositoryImpl(
     }
 
     override suspend fun addRequests(requests: List<RequestModel>): Result<Unit> {
-        localSource.addRequests(requests)
-        val entities = requests.map { it.toEntity() }
-        return remoteSource.addRequests(entities)
+        localSource.addRequests(requests.map { it.toDbEntity() })
+        return remoteSource.addRequests(requests.map { it.toApiEntity() })
     }
 }

@@ -1,9 +1,7 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.user.DepartmentEntity
 import studying.diplom.retailhub.data.enteties.user.UserEntity
-import studying.diplom.retailhub.domain.models.DepartmentModel
-import studying.diplom.retailhub.domain.models.UserModel
+import studying.diplom.retailhub.domain.models.user.UserModel
 
 fun UserEntity.toModel(): UserModel = UserModel(
     id = id,
@@ -17,7 +15,16 @@ fun UserEntity.toModel(): UserModel = UserModel(
     createdAt = createdAt
 )
 
-fun DepartmentEntity.toModel(): DepartmentModel = DepartmentModel(
+// Метод toEntity обычно нужен для преобразования из Model в Entity.
+// Если нужно создать копию Entity, лучше использовать .copy()
+fun UserModel.toEntity(): UserEntity = UserEntity(
     id = id,
-    name = name
+    storeId = storeId,
+    phoneNumber = phoneNumber,
+    firstName = firstName,
+    lastName = lastName,
+    role = role,
+    currentStatus = currentStatus,
+    departments = departments.map { it.toApiEntity() },
+    createdAt = createdAt
 )
