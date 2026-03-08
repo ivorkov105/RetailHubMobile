@@ -28,6 +28,18 @@ CREATE TABLE DepartmentEntity (
     createdAt TEXT NOT NULL
 );
 
+CREATE TABLE UserEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    phoneNumber TEXT NOT NULL,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    role TEXT NOT NULL,
+    currentStatus TEXT NOT NULL,
+    departmentIds TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
 -- Requests
 getRequests:
 SELECT * FROM RequestEntity;
@@ -54,6 +66,9 @@ DELETE FROM StoreEntity;
 getDepartments:
 SELECT * FROM DepartmentEntity;
 
+getDepartment:
+SELECT * FROM DepartmentEntity WHERE id = ?;
+
 insertDepartment:
 INSERT OR REPLACE INTO DepartmentEntity(id, storeId, name, description, createdAt)
 VALUES ?;
@@ -63,3 +78,20 @@ DELETE FROM DepartmentEntity WHERE id = ?;
 
 removeAllDepartments:
 DELETE FROM DepartmentEntity;
+
+-- Users
+getStoreUsers:
+SELECT * FROM UserEntity;
+
+getUser:
+SELECT * FROM UserEntity WHERE id = ?;
+
+insertUser:
+INSERT OR REPLACE INTO UserEntity(id, storeId, phoneNumber, firstName, lastName, role, currentStatus, departmentIds, createdAt)
+VALUES ?;
+
+removeUser:
+DELETE FROM UserEntity WHERE id = ?;
+
+removeAllUsers:
+DELETE FROM UserEntity;

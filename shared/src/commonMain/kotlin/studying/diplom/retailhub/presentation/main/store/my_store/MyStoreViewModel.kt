@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import studying.diplom.retailhub.domain.use_cases.shop_use_cases.GetMyStoreUseCase
+import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
 
 sealed class MyStoreNavigationEvent {
     object NavigateBack : MyStoreNavigationEvent()

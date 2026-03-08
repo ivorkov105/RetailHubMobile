@@ -32,7 +32,7 @@ val networkModule = module {
                 }
             }
             defaultRequest {
-                url("http://217.71.129.139:6008/")
+                url("http://185.221.199.141:80/")
                 
                 val token = settings.getString("access_token", "")
                 if (token.isNotEmpty()) {

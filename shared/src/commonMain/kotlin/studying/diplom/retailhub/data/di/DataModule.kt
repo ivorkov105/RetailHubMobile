@@ -9,10 +9,12 @@ import studying.diplom.retailhub.data.data_sources.api.ApiClientImpl
 import studying.diplom.retailhub.data.repositories.AuthRepositoryImpl
 import studying.diplom.retailhub.data.repositories.RequestRepositoryImpl
 import studying.diplom.retailhub.data.repositories.StoreRepositoryImpl
+import studying.diplom.retailhub.data.repositories.UserRepositoryImpl
 import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.domain.repositories.AuthRepository
 import studying.diplom.retailhub.domain.repositories.RequestRepository
 import studying.diplom.retailhub.domain.repositories.StoreRepository
+import studying.diplom.retailhub.domain.repositories.UserRepository
 
 val dataModule = module {
     single {
@@ -20,7 +22,6 @@ val dataModule = module {
         RetailHubDatabase(driver = driver)
     }
 
-    // Settings инициализируются в platformModule, здесь удаляем
     single<ApiClient> { ApiClientImpl(get()) }
     
     single { LocalSource(get()) }
@@ -29,4 +30,5 @@ val dataModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
     single<RequestRepository> { RequestRepositoryImpl(get(), get()) }
     single<StoreRepository> { StoreRepositoryImpl(get(), get()) }
+	single<UserRepository> { UserRepositoryImpl(get(), get()) }
 }

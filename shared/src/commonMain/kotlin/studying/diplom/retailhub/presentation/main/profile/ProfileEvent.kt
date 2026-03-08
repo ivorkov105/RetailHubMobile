@@ -6,4 +6,7 @@ sealed class ProfileEvent {
     object OnMyStoreClick : ProfileEvent()
     object OnCreateStoreClick : ProfileEvent()
 	object OnUpdateStoreClick : ProfileEvent()
+	object OnCreateDepartmentClick : ProfileEvent()
+	object OnCreateEmployeeClick : ProfileEvent()
+	object OnQrClick : ProfileEvent()
 }

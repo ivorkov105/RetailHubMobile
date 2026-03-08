@@ -1,4 +1,4 @@
-package studying.diplom.retailhub.domain.use_cases.shop_use_cases
+package studying.diplom.retailhub.domain.use_cases.store_use_cases
 
 import studying.diplom.retailhub.domain.models.shop.DepartmentModel
 import studying.diplom.retailhub.domain.repositories.StoreRepository

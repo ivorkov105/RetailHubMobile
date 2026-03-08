@@ -9,6 +9,13 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.RefreshTokenRequest
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
@@ -16,6 +23,7 @@ import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity
 import studying.diplom.retailhub.data.enteties.shop.StoreEntity
 import studying.diplom.retailhub.data.enteties.user.UserEntity
+import studying.diplom.retailhub.data.enteties.user.UserListEntity
 
 class ApiClientImpl(
     private val httpClient: HttpClient
@@ -79,17 +87,62 @@ class ApiClientImpl(
 		httpClient.get("stores/my/departments").body()
 	}
 
+	override suspend fun getDepartment(id: String): Result<DepartmentEntity> = runCatching {
+		httpClient.get("departments/${id}") {
+			contentType(ContentType.Application.Json)
+		}.body()
+	}
+
 	override suspend fun updateDepartment(updatingDepartment: DepartmentEntity): Result<DepartmentEntity> = runCatching {
-		httpClient.put("stores/my/departments") {
+		httpClient.put("departments/${updatingDepartment.id}") {
 			contentType(ContentType.Application.Json)
 			setBody(updatingDepartment)
 		}.body()
 	}
 
 	override suspend fun deleteDepartment(deletingDepartment: DepartmentEntity): Result<Unit> = runCatching {
-		httpClient.delete("stores/my/departments") {
+		httpClient.delete("departments/${deletingDepartment.id}") {
 			contentType(ContentType.Application.Json)
-			setBody(deletingDepartment)
 		}
+	}
+
+	override suspend fun getStoreUsers(): Result<List<UserEntity>> = runCatching {
+		httpClient.get("users").body<UserListEntity>().content
+	}
+
+	override suspend fun getUser(id: String): Result<UserEntity> = runCatching {
+		httpClient.get("users/$id").body()
+	}
+
+	override suspend fun addUser(newUser: UserEntity): Result<Unit> = runCatching {
+        val jsonBody = buildJsonObject {
+            put("phone_number", newUser.phoneNumber)
+            put("password", newUser.password)
+            put("first_name", newUser.firstName)
+            put("last_name", newUser.lastName)
+            put("role", newUser.role)
+            putJsonArray("department_ids") {
+                newUser.departments.forEach { add(JsonPrimitive(it.id)) }
+            }
+        }
+		httpClient.post("users") {
+			contentType(ContentType.Application.Json)
+			setBody(jsonBody)
+		}
+	}
+
+	override suspend fun updateUser(updatingUser: UserEntity): Result<UserEntity> = runCatching {
+        val jsonBody = buildJsonObject {
+            put("first_name", updatingUser.firstName)
+            put("last_name", updatingUser.lastName)
+        }
+		httpClient.put("users/${updatingUser.id}") {
+			contentType(ContentType.Application.Json)
+			setBody(jsonBody)
+		}.body()
+	}
+
+	override suspend fun deleteUser(deletingUser: UserEntity): Result<Unit> = runCatching {
+		httpClient.delete("users/${deletingUser.id}")
 	}
 }

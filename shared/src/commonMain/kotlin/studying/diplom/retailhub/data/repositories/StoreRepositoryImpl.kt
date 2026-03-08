@@ -64,7 +64,24 @@ class StoreRepositoryImpl(
         )
     }
 
-    override suspend fun updateDepartment(department: DepartmentModel): Result<DepartmentModel> {
+	override suspend fun getDepartment(id: String): Result<DepartmentModel> {
+		return remoteSource.getDepartment(id).fold(
+			onSuccess = { apiEntity ->
+				localSource.saveDepartment(apiEntity.toDbEntity())
+				Result.success(apiEntity.toModel())
+			},
+			onFailure = { exception ->
+				val localData = localSource.getDepartment(id)
+				if (localData != null) {
+					Result.success(localData.toModel())
+				} else {
+					Result.failure(exception)
+				}
+			}
+		)
+	}
+
+	override suspend fun updateDepartment(department: DepartmentModel): Result<DepartmentModel> {
         return remoteSource.updateDepartment(department.toApiEntity()).map { apiEntity ->
             apiEntity.toModel()
         }

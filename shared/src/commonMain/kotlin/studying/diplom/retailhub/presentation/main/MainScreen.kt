@@ -24,8 +24,8 @@ import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import studying.diplom.retailhub.presentation.main.departments.DepartmentTab
-import studying.diplom.retailhub.presentation.main.employees.EmployeesTab
+import studying.diplom.retailhub.presentation.main.departments.department_list.DepartmentsListTab
+import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
 import studying.diplom.retailhub.presentation.main.profile.ProfileTab
 
 class MainScreen : Screen {
@@ -48,7 +48,7 @@ class MainScreen : Screen {
                             containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             TabNavigationItem(EmployeesTab, state, screenModel)
-                            TabNavigationItem(DepartmentTab, state, screenModel)
+                            TabNavigationItem(DepartmentsListTab, state, screenModel)
                             TabNavigationItem(ProfileTab, state, screenModel)
                         }
                     }

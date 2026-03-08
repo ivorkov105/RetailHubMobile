@@ -10,6 +10,7 @@ interface StoreRepository {
     
     suspend fun addDepartment(department: DepartmentModel): Result<Unit>
     suspend fun getDepartments(): Result<List<DepartmentModel>>
-    suspend fun updateDepartment(department: DepartmentModel): Result<DepartmentModel>
+	suspend fun getDepartment(id: String): Result<DepartmentModel>
+	suspend fun updateDepartment(department: DepartmentModel): Result<DepartmentModel>
     suspend fun deleteDepartment(department: DepartmentModel): Result<Unit>
 }

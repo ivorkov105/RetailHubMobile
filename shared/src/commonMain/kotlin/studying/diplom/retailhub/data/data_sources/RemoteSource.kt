@@ -52,11 +52,35 @@ class RemoteSource(
         return apiClient.getMyStoreDepartments()
     }
 
-    override suspend fun updateDepartment(updatingDepartment: DepartmentEntity): Result<DepartmentEntity> {
+	override suspend fun getDepartment(id: String): Result<DepartmentEntity> {
+		return apiClient.getDepartment(id)
+	}
+
+	override suspend fun updateDepartment(updatingDepartment: DepartmentEntity): Result<DepartmentEntity> {
         return apiClient.updateDepartment(updatingDepartment)
     }
 
     override suspend fun deleteDepartment(deletingDepartment: DepartmentEntity): Result<Unit> {
         return apiClient.deleteDepartment(deletingDepartment)
     }
+
+	override suspend fun getStoreUsers(): Result<List<UserEntity>> {
+		return apiClient.getStoreUsers()
+	}
+
+	override suspend fun getUser(id: String): Result<UserEntity> {
+		return apiClient.getUser(id)
+	}
+
+	override suspend fun addUser(newUser: UserEntity): Result<Unit> {
+		return apiClient.addUser(newUser)
+	}
+
+	override suspend fun updateUser(updatingUser: UserEntity): Result<UserEntity> {
+		return apiClient.updateUser(updatingUser)
+	}
+
+	override suspend fun deleteUser(deletingUser: UserEntity): Result<Unit> {
+		return apiClient.deleteUser(deletingUser)
+	}
 }

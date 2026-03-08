@@ -1,9 +1,10 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.user.UserEntity
+import studying.diplom.retailhub.data.enteties.user.UserEntity as ApiUserEntity
+import studying.diplom.retailhub.database.UserEntity as DbUserEntity
 import studying.diplom.retailhub.domain.models.user.UserModel
 
-fun UserEntity.toModel(): UserModel = UserModel(
+fun ApiUserEntity.toModel() = UserModel(
     id = id,
     storeId = storeId,
     phoneNumber = phoneNumber,
@@ -12,12 +13,11 @@ fun UserEntity.toModel(): UserModel = UserModel(
     role = role,
     currentStatus = currentStatus,
     departments = departments.map { it.toModel() },
+    password = password,
     createdAt = createdAt
 )
 
-// Метод toEntity обычно нужен для преобразования из Model в Entity.
-// Если нужно создать копию Entity, лучше использовать .copy()
-fun UserModel.toEntity(): UserEntity = UserEntity(
+fun UserModel.toApiEntity() = ApiUserEntity(
     id = id,
     storeId = storeId,
     phoneNumber = phoneNumber,
@@ -26,5 +26,42 @@ fun UserModel.toEntity(): UserEntity = UserEntity(
     role = role,
     currentStatus = currentStatus,
     departments = departments.map { it.toApiEntity() },
+    password = password,
+    createdAt = createdAt
+)
+
+fun ApiUserEntity.toDbEntity() = DbUserEntity(
+    id = id,
+    storeId = storeId,
+    phoneNumber = phoneNumber,
+    firstName = firstName,
+    lastName = lastName,
+    role = role,
+    currentStatus = currentStatus,
+    departmentIds = departments.map { it.id }.joinToString(","),
+    createdAt = createdAt
+)
+
+fun DbUserEntity.toModel() = UserModel(
+    id = id,
+    storeId = storeId,
+    phoneNumber = phoneNumber,
+    firstName = firstName,
+    lastName = lastName,
+    role = role,
+    currentStatus = currentStatus,
+    departments = emptyList(), 
+    createdAt = createdAt
+)
+
+fun UserModel.toDbEntity() = DbUserEntity(
+    id = id,
+    storeId = storeId,
+    phoneNumber = phoneNumber,
+    firstName = firstName,
+    lastName = lastName,
+    role = role,
+    currentStatus = currentStatus,
+    departmentIds = departments.map { it.id }.joinToString(","),
     createdAt = createdAt
 )

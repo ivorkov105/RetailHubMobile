@@ -5,10 +5,12 @@ import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.database.RequestEntity
 import studying.diplom.retailhub.database.StoreEntity
 import studying.diplom.retailhub.database.DepartmentEntity
+import studying.diplom.retailhub.database.UserEntity
 
 class LocalSource(database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
 
+    // Requests
     fun getRequests(): List<RequestEntity> {
         return queries.getRequests().executeAsList()
     }
@@ -30,6 +32,7 @@ class LocalSource(database: RetailHubDatabase) {
         }
     }
 
+    // Stores
     fun getStore(): StoreEntity? {
         return queries.getStore().executeAsOneOrNull()
     }
@@ -41,8 +44,13 @@ class LocalSource(database: RetailHubDatabase) {
         }
     }
 
+    // Departments
     fun getDepartments(): List<DepartmentEntity> {
         return queries.getDepartments().executeAsList()
+    }
+
+    fun getDepartment(id: String): DepartmentEntity? {
+        return queries.getDepartment(id).executeAsOneOrNull()
     }
 
     fun saveDepartments(departments: List<DepartmentEntity>) {
@@ -54,9 +62,29 @@ class LocalSource(database: RetailHubDatabase) {
         }
     }
 
+    fun saveDepartment(department: DepartmentEntity) {
+        queries.insertDepartment(department)
+    }
+
     fun deleteDepartment(id: String) {
         queries.removeDepartment(id)
     }
+
+	// Users
+	fun getStoreUsers(): List<UserEntity> = queries.getStoreUsers().executeAsList()
+
+	fun getUser(id: String): UserEntity? = queries.getUser(id).executeAsOneOrNull()
+
+	fun saveUsers(users: List<UserEntity>) {
+		queries.transaction {
+			queries.removeAllUsers()
+			users.forEach { queries.insertUser(it) }
+		}
+	}
+
+	fun saveUser(user: UserEntity) = queries.insertUser(user)
+
+	fun deleteUser(id: String) = queries.removeUser(id)
 }
 
 interface DatabaseDriverFactory {

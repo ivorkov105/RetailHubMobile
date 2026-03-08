@@ -33,8 +33,13 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.presentation.auth.AuthScreen
+import studying.diplom.retailhub.presentation.main.components.DashboardButton
+import studying.diplom.retailhub.presentation.main.components.DashboardItem
 import studying.diplom.retailhub.presentation.main.store.create_store.CreateStoreScreen
+import studying.diplom.retailhub.presentation.main.departments.department.DepartmentScreen
+import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeScreen
 import studying.diplom.retailhub.presentation.main.store.my_store.MyStoreScreen
+import studying.diplom.retailhub.presentation.main.utils.ScreenMode
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_profile
 
@@ -77,6 +82,12 @@ object ProfileTab : Tab {
 	                is ProfileNavigationEvent.NavigateToUpdateStore -> {
 		                navigator.parent?.push(CreateStoreScreen(initialStore = event.store))
 	                }
+	                is ProfileNavigationEvent.NavigateToCreateDepartment -> {
+						navigator.parent?.push(DepartmentScreen(mode = ScreenMode.CREATE))
+					}
+	                is ProfileNavigationEvent.NavigateToCreateEmployee -> {
+	                    navigator.parent?.push(EmployeeScreen(mode = ScreenMode.CREATE))
+					}
                 }
             }
         }
@@ -140,13 +151,11 @@ object ProfileTab : Tab {
                     }
 
                     val dashboardItems = listOf(
-                        DashboardItem("Обновить отдел", Color(0xFFFFA500), "PUT", ProfileEvent.LoadProfile),
-                        DashboardItem("Удалить отдел", Color(0xFFFF4B4B), "DELETE", ProfileEvent.LoadProfile),
-                        DashboardItem("Создать магазин", Color(0xFF4CAF50), "POST", ProfileEvent.OnCreateStoreClick),
-                        DashboardItem("Мой магазин", Color(0xFF2196F3), "GET", ProfileEvent.OnMyStoreClick),
-                        DashboardItem("Обновить магазин", Color(0xFFFFA500), "PUT", ProfileEvent.OnUpdateStoreClick),
-                        DashboardItem("Список отделов", Color(0xFF2196F3), "GET", ProfileEvent.LoadProfile),
-                        DashboardItem("Создать отдел", Color(0xFF4CAF50), "POST", ProfileEvent.LoadProfile)
+                        DashboardItem("Создать магазин", ProfileEvent.OnCreateStoreClick),
+                        DashboardItem("Обновить магазин", ProfileEvent.OnUpdateStoreClick),
+                        DashboardItem("Создать отдел", ProfileEvent.OnCreateDepartmentClick),
+						DashboardItem("Создать консультанта", ProfileEvent.OnCreateEmployeeClick),
+						//DashboardItem("QR", ProfileEvent.OnQrClick),
                     )
 
                     items(dashboardItems) { item ->
@@ -174,55 +183,3 @@ object ProfileTab : Tab {
         }
     }
 }
-
-@Composable
-fun DashboardButton(
-    item: DashboardItem,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clickable { onClick() },
-        color = Color.White,
-        shape = RoundedCornerShape(8.dp),
-        shadowElevation = 4.dp
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Surface(
-                color = item.color,
-                shape = RoundedCornerShape(4.dp)
-            ) {
-                Text(
-                    text = item.method,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-            
-            Text(
-                text = item.label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.DarkGray,
-                lineHeight = 16.sp
-            )
-        }
-    }
-}
-
-data class DashboardItem(
-    val label: String,
-    val color: Color,
-    val method: String,
-    val event: ProfileEvent
-)

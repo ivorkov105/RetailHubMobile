@@ -13,13 +13,16 @@ import kotlinx.coroutines.launch
 import studying.diplom.retailhub.domain.models.shop.StoreModel
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
-import studying.diplom.retailhub.domain.use_cases.shop_use_cases.GetMyStoreUseCase
+import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
 
 sealed class ProfileNavigationEvent {
     object NavigateToAuth : ProfileNavigationEvent()
     object NavigateToMyStore : ProfileNavigationEvent()
     object NavigateToCreateStore : ProfileNavigationEvent()
-    data class NavigateToUpdateStore(val store: StoreModel) : ProfileNavigationEvent()
+	object NavigateToCreateDepartment : ProfileNavigationEvent()
+	object NavigateToCreateEmployee : ProfileNavigationEvent()
+	data class NavigateToUpdateStore(val store: StoreModel) : ProfileNavigationEvent()
 }
 
 class ProfileViewModel(
@@ -36,25 +39,41 @@ class ProfileViewModel(
 
     fun onEvent(event: ProfileEvent) {
         when (event) {
-            is ProfileEvent.LoadProfile -> loadProfile()
-            is ProfileEvent.Logout -> logout()
-            is ProfileEvent.OnMyStoreClick -> {
-                screenModelScope.launch {
-                    _navigationEvents.emit(ProfileNavigationEvent.NavigateToMyStore)
-                }
-            }
-            is ProfileEvent.OnCreateStoreClick -> {
-                screenModelScope.launch {
-                    _navigationEvents.emit(ProfileNavigationEvent.NavigateToCreateStore)
-                }
-            }
-            is ProfileEvent.OnUpdateStoreClick -> {
-                screenModelScope.launch {
-                    _state.value.store?.let {
-                        _navigationEvents.emit(ProfileNavigationEvent.NavigateToUpdateStore(it))
-                    }
-                }
-            }
+	        is ProfileEvent.LoadProfile          -> loadProfile()
+	        is ProfileEvent.Logout               -> logout()
+
+	        is ProfileEvent.OnMyStoreClick       -> {
+		        screenModelScope.launch {
+			        _navigationEvents.emit(NavigateToMyStore)
+		        }
+	        }
+
+	        is ProfileEvent.OnCreateStoreClick   -> {
+		        screenModelScope.launch {
+			        _navigationEvents.emit(NavigateToCreateStore)
+		        }
+	        }
+
+	        is ProfileEvent.OnUpdateStoreClick   -> {
+		        screenModelScope.launch {
+			        _state.value.store?.let {
+				        _navigationEvents.emit(NavigateToUpdateStore(it))
+			        }
+		        }
+	        }
+
+	        ProfileEvent.OnCreateDepartmentClick -> {
+		        screenModelScope.launch {
+			        _navigationEvents.emit(NavigateToCreateDepartment)
+		        }
+	        }
+
+	        ProfileEvent.OnCreateEmployeeClick   -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToCreateEmployee)
+				}
+			}
+	        ProfileEvent.OnQrClick               -> TODO()
         }
     }
 
@@ -76,7 +95,7 @@ class ProfileViewModel(
     private fun logout() {
         screenModelScope.launch {
             logoutUseCase()
-            _navigationEvents.emit(ProfileNavigationEvent.NavigateToAuth)
+            _navigationEvents.emit(NavigateToAuth)
         }
     }
 }

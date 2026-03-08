@@ -22,8 +22,17 @@ interface ApiClient {
 	suspend fun addStore(newStore: StoreEntity): Result<Unit>
 	suspend fun getMyStore(): Result<StoreEntity>
 	suspend fun updateMyStore(updatingStore: StoreEntity): Result<StoreEntity>
+	
 	suspend fun addDepartment(newDepartment: DepartmentEntity): Result<Unit>
 	suspend fun getMyStoreDepartments(): Result<List<DepartmentEntity>>
+	suspend fun getDepartment(id: String): Result<DepartmentEntity>
 	suspend fun updateDepartment(updatingDepartment: DepartmentEntity): Result<DepartmentEntity>
 	suspend fun deleteDepartment(deletingDepartment: DepartmentEntity): Result<Unit>
+
+	//Пользователи
+	suspend fun getStoreUsers(): Result<List<UserEntity>>
+	suspend fun getUser(id: String): Result<UserEntity>
+	suspend fun addUser(newUser: UserEntity): Result<Unit>
+	suspend fun updateUser(updatingUser: UserEntity): Result<UserEntity>
+	suspend fun deleteUser(deletingUser: UserEntity): Result<Unit>
 }
