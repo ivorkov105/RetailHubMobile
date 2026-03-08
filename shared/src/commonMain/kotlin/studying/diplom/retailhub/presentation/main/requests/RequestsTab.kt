@@ -2,16 +2,22 @@ package studying.diplom.retailhub.presentation.main.requests
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,6 +25,8 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.jetbrains.compose.resources.painterResource
+import studying.diplom.retailhub.domain.models.request.RequestStatus
+import studying.diplom.retailhub.presentation.main.requests.components.RequestsListItem
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_list
 
@@ -28,40 +36,132 @@ object RequestsTab : Tab {
         get() {
             val title = "Заявки"
             val icon = painterResource(Res.drawable.ic_list)
-            return TabOptions(index = 0u, title = title, icon = icon)
+            return remember { TabOptions(index = 2u, title = title, icon = icon) }
         }
 
     @Composable
     override fun Content() {
-        val screenModel: RequestsViewModel = RequestsTab.koinScreenModel()
+        val screenModel: RequestsViewModel = koinScreenModel()
         val state by screenModel.state.collectAsState()
+        val listState = rememberLazyListState()
 
         LaunchedEffect(Unit) {
-            screenModel.loadRequests()
+            screenModel.onEvent(RequestsEvent.OnLoadRequestsList)
+        }
+
+        val shouldLoadMore by remember {
+            derivedStateOf {
+                val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+                val totalItemsCount = listState.layoutInfo.totalItemsCount
+                lastVisibleItemIndex >= totalItemsCount - 5 && totalItemsCount > 0
+            }
+        }
+
+        LaunchedEffect(shouldLoadMore) {
+            if (shouldLoadMore && !state.isLastPage && !state.isPaginationLoading) {
+                screenModel.loadNextPage()
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            if (state.isLoading) {
+            if (state.isLoading && state.requests.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(16.dp)
+                    state = listState,
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
                 ) {
-                    items(state.requests) { request ->
-                        Text(
-                            text = "Заявка: ${request.id}\nСтатус: ${request.status}",
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium
+                    item { Box(modifier = Modifier.padding(top = 16.dp)) }
+
+                    items(state.requests, key = { it.id }) { request ->
+                        RequestsListItem(
+                            request = request,
+                            currentUserFullName = state.currentUserFullName,
+                            onButtonClick = { 
+                                if (request.status == RequestStatus.ASSIGNED) {
+                                    screenModel.onEvent(RequestsEvent.OnShowCompleteDialog(request))
+                                } else {
+                                    screenModel.onEvent(RequestsEvent.OnShowAcceptDialog(request))
+                                }
+                            },
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
+
+                    if (state.isPaginationLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+
+                    item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
                 }
             }
-            
+
+            // Диалоговое окно подтверждения принятия
+            state.requestToAccept?.let { request ->
+                AlertDialog(
+                    onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) },
+                    title = { Text(text = "Взять заявку?") },
+                    text = { Text(text = "Вы уверены, что хотите взять в работу заявку из отдела ${request.departmentName}?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { 
+                                screenModel.onEvent(RequestsEvent.OnAcceptRequest(request.id)) 
+                            }
+                        ) {
+                            Text("Да")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) }
+                        ) {
+                            Text("Нет")
+                        }
+                    }
+                )
+            }
+
+            // Диалоговое окно подтверждения завершения
+            state.requestToComplete?.let { request ->
+                AlertDialog(
+                    onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissCompleteDialog) },
+                    title = { Text(text = "Завершить заявку?") },
+                    text = { Text(text = "Вы уверены, что хотите завершить работу над заявкой из отдела ${request.departmentName}?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { 
+                                screenModel.onEvent(RequestsEvent.OnCompleteRequest(request.id)) 
+                            }
+                        ) {
+                            Text("Да")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissCompleteDialog) }
+                        ) {
+                            Text("Нет")
+                        }
+                    }
+                )
+            }
+
             state.error?.let { error ->
                 Text(
                     text = error,
                     color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
                 )
             }
         }

@@ -54,7 +54,7 @@ class AuthScreen : Screen {
 
         LaunchedEffect(state.isSuccess) {
             if (state.isSuccess) {
-                navigator.replace(MainScreen())
+                navigator.replace(MainScreen(state.role))
             }
         }
 

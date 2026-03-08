@@ -5,30 +5,37 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RequestEntity(
+
 	@SerialName("id")
-	val id: String,
+	val id: String = "",
 
-	@SerialName("client_session_token")
-	val clientSessionToken: String,
+	@SerialName("store_id")
+	val storeId: String = "",
 
-	@SerialName("status")
-	val status: RequestStatus,
+	@SerialName("department_id")
+	val departmentId: String = "",
 
 	@SerialName("department_name")
-	val departmentName: String?,
+	val departmentName: String = "",
 
-	@SerialName("consultant_name")
-	val consultantName: String?,
+	@SerialName("is_escalated")
+	val isEscalated: Boolean = false,
 
-	@SerialName("can_remind")
-	val canRemind: Boolean,
+	@SerialName("assigned_user")
+	val assignedUser: AssignedRequestUserEntity = AssignedRequestUserEntity(),
 
-	@SerialName("can_reassign")
-	val canReassign: Boolean,
+	@SerialName("status")
+	val status: String = RequestStatus.CREATED.name,
+
+	@SerialName("client_session_token")
+	val clientSessionToken: String = "",
 
 	@SerialName("created_at")
-	val createdAt: String,
+	val createdAt: String = "",
 
 	@SerialName("assigned_at")
-	val assignedAt: String?
+	val assignedAt: String = "",
+
+	@SerialName("completed_at")
+	val completedAt: String = ""
 )

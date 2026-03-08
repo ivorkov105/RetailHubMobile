@@ -40,6 +40,7 @@ import studying.diplom.retailhub.presentation.main.departments.department.Depart
 import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeScreen
 import studying.diplom.retailhub.presentation.main.store.my_store.MyStoreScreen
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_profile
 
@@ -52,7 +53,7 @@ object ProfileTab : Tab {
 
             return remember {
                 TabOptions(
-                    index = 2u,
+                    index = 3u,
                     title = title,
                     icon = icon
                 )
@@ -150,16 +151,17 @@ object ProfileTab : Tab {
                         }
                     }
 
-                    val dashboardItems = listOf(
-                        DashboardItem("Создать магазин", ProfileEvent.OnCreateStoreClick),
-                        DashboardItem("Обновить магазин", ProfileEvent.OnUpdateStoreClick),
-                        DashboardItem("Создать отдел", ProfileEvent.OnCreateDepartmentClick),
-						DashboardItem("Создать консультанта", ProfileEvent.OnCreateEmployeeClick),
-						//DashboardItem("QR", ProfileEvent.OnQrClick),
-                    )
+                    if (state.user?.role == UserRoles.MANAGER.name) {
+                        val dashboardItems = listOf(
+                            DashboardItem("Создать магазин", ProfileEvent.OnCreateStoreClick),
+                            DashboardItem("Обновить магазин", ProfileEvent.OnUpdateStoreClick),
+                            DashboardItem("Создать отдел", ProfileEvent.OnCreateDepartmentClick),
+                            DashboardItem("Создать консультанта", ProfileEvent.OnCreateEmployeeClick),
+                        )
 
-                    items(dashboardItems) { item ->
-                        DashboardButton(item) { screenModel.onEvent(item.event) }
+                        items(dashboardItems) { item ->
+                            DashboardButton(item) { screenModel.onEvent(item.event) }
+                        }
                     }
                     
                     item(span = { GridItemSpan(2) }) {

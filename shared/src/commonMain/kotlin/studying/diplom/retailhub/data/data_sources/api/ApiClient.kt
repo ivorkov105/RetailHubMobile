@@ -3,6 +3,8 @@ package studying.diplom.retailhub.data.data_sources.api
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
+import studying.diplom.retailhub.data.enteties.request.RequestListEntity
+import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
 import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity
 import studying.diplom.retailhub.data.enteties.shop.StoreEntity
 import studying.diplom.retailhub.data.enteties.user.UserEntity
@@ -15,8 +17,14 @@ interface ApiClient {
     suspend fun getMe(): Result<UserEntity>
 
 	//Заявки
-    suspend fun getRequests(): Result<List<RequestEntity>>
+    suspend fun getRequests(status: String, departmentId: String, dateFrom: String, dateTo: String, page: Int, size: Int): Result<RequestListEntity>
     suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit>
+    suspend fun assignRequest(requestId: String): Result<RequestEntity>
+    suspend fun completeRequest(requestId: String): Result<RequestEntity>
+
+	//Смены
+	suspend fun startShift(): Result<ShiftEntity>
+	suspend fun endShift(): Result<ShiftEntity>
 
 	//Магазины и отделы
 	suspend fun addStore(newStore: StoreEntity): Result<Unit>

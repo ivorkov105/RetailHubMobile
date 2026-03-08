@@ -30,15 +30,6 @@ internal val DarkSurfaceVariant = Color(0xFF383838)
 internal val DarkOnBackground = Color(0xFFE0E0E0)
 internal val DarkOnSurface = Color(0xFFE0E0E0)
 
-//Дополнительные цвета
-internal val LightStatusActive = Color(0xFF00FF15)
-internal val LightStatusCritical = Color(0xFFFF0000)
-internal val LightStatusInactive = Color(0xFF777777)
-
-internal val DarkStatusActive = Color(0xFF4CAF50)
-internal val DarkStatusCritical = Color(0xFFF44336)
-internal val DarkStatusInactive = Color(0xFF868686)
-
 internal val LightColorScheme = lightColorScheme(
 	primary = LightPrimary,
 	onPrimary = LightOnPrimary,

@@ -1,6 +1,7 @@
 package studying.diplom.retailhub.presentation.di
 
 import org.koin.dsl.module
+import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.presentation.auth.AuthViewModel
 import studying.diplom.retailhub.presentation.main.MainViewModel
 import studying.diplom.retailhub.presentation.main.departments.department_list.DepartmentsListViewModel
@@ -13,9 +14,9 @@ import studying.diplom.retailhub.presentation.main.employees.employees_list.Empl
 import studying.diplom.retailhub.presentation.main.store.my_store.MyStoreViewModel
 
 val viewModelModule = module {
-	factory { RequestsViewModel(get()) }
+	factory { RequestsViewModel(get(), get(),get(),get()) }
 	factory { AuthViewModel(get()) }
-	factory { MainViewModel() }
+	factory { params -> MainViewModel(params.getOrNull(),get(),get()) }
 	factory { ProfileViewModel(get(), get(), get()) }
 	factory { params -> CreateStoreViewModel(get(), get(), params.getOrNull()) }
 	factory { MyStoreViewModel(get()) }
@@ -23,4 +24,5 @@ val viewModelModule = module {
 	factory { DepartmentsListViewModel(get()) }
 	factory { params -> EmployeeViewModel(get(),get(),get(), get(),get(),params.getOrNull()) }
 	factory { EmployeesListViewModel(get()) }
+	factory { RequestsViewModel(get(),get(),get(),get()) }
 }

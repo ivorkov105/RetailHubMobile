@@ -4,6 +4,8 @@ import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
+import studying.diplom.retailhub.data.enteties.request.RequestListEntity
+import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
 import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity
 import studying.diplom.retailhub.data.enteties.shop.StoreEntity
 import studying.diplom.retailhub.data.enteties.user.UserEntity
@@ -24,15 +26,38 @@ class RemoteSource(
         return apiClient.getMe()
     }
 
-    override suspend fun getRequests(): Result<List<RequestEntity>> {
-        return apiClient.getRequests()
+    override suspend fun getRequests(
+        status: String,
+        departmentId: String,
+        dateFrom: String,
+        dateTo: String,
+        page: Int,
+        size: Int
+    ): Result<RequestListEntity> {
+        return apiClient.getRequests(status, departmentId, dateFrom, dateTo, page, size)
     }
 
     override suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit> {
         return apiClient.addRequests(newRequests)
     }
 
-    override suspend fun addStore(newStore: StoreEntity): Result<Unit> {
+    override suspend fun assignRequest(requestId: String): Result<RequestEntity> {
+        return apiClient.assignRequest(requestId)
+    }
+
+    override suspend fun completeRequest(requestId: String): Result<RequestEntity> {
+        return apiClient.completeRequest(requestId)
+    }
+
+	override suspend fun startShift(): Result<ShiftEntity> {
+		return apiClient.startShift()
+	}
+
+	override suspend fun endShift(): Result<ShiftEntity> {
+		return apiClient.endShift()
+	}
+
+	override suspend fun addStore(newStore: StoreEntity): Result<Unit> {
         return apiClient.addStore(newStore)
     }
 

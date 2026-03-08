@@ -1,78 +1,84 @@
 package studying.diplom.retailhub.data.mappers
 
+import studying.diplom.retailhub.data.enteties.request.AssignedRequestUserEntity
+import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.data.enteties.request.RequestEntity as ApiRequestEntity
 import studying.diplom.retailhub.database.RequestEntity as DbRequestEntity
-import studying.diplom.retailhub.domain.models.request.RequestModel
-import studying.diplom.retailhub.data.enteties.request.RequestStatus
+import studying.diplom.retailhub.domain.models.request.RequestStatus as DomainRequestStatus
 
 fun ApiRequestEntity.toModel() = RequestModel(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = status,
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
+	id = id,
+	storeId = storeId,
+	departmentId = departmentId,
+	departmentName = departmentName,
+	isEscalated = isEscalated,
+	assignedUserFirstName = assignedUser.firstName.ifBlank { null },
+	assignedUserLastName = assignedUser.lastName.ifBlank { null },
+	status = DomainRequestStatus.valueOf(status),
+	clientSessionToken = clientSessionToken,
+	createdAt = createdAt,
+	assignedAt = assignedAt.ifBlank { null },
+	completedAt = completedAt.ifBlank { null }
 )
 
 fun RequestModel.toApiEntity() = ApiRequestEntity(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = status,
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
+	id = id,
+	storeId = storeId,
+	departmentId = departmentId,
+	departmentName = departmentName,
+	isEscalated = isEscalated,
+	assignedUser = AssignedRequestUserEntity(
+		firstName = assignedUserFirstName ?: "",
+		lastName = assignedUserLastName ?: ""
+	),
+	status = status.name,
+	clientSessionToken = clientSessionToken,
+	createdAt = createdAt,
+	assignedAt = assignedAt ?: "",
+	completedAt = completedAt ?: ""
 )
 
 fun ApiRequestEntity.toDbEntity() = DbRequestEntity(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = status.name,
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
-)
-
-fun DbRequestEntity.toApiEntity() = ApiRequestEntity(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = RequestStatus.valueOf(status),
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
+	id = id,
+	storeId = storeId,
+	departmentId = departmentId,
+	departmentName = departmentName,
+	isEscalated = isEscalated,
+	assignedUserFirstName = assignedUser.firstName.ifBlank { null },
+	assignedUserLastName = assignedUser.lastName.ifBlank { null },
+	status = status,
+	clientSessionToken = clientSessionToken,
+	createdAt = createdAt,
+	assignedAt = assignedAt.ifBlank { null },
+	completedAt = completedAt.ifBlank { null }
 )
 
 fun DbRequestEntity.toModel() = RequestModel(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = RequestStatus.valueOf(status),
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
+	id = id,
+	storeId = storeId,
+	departmentId = departmentId,
+	departmentName = departmentName,
+	isEscalated = isEscalated,
+	assignedUserFirstName = assignedUserFirstName,
+	assignedUserLastName = assignedUserLastName,
+	status = DomainRequestStatus.valueOf(status),
+	clientSessionToken = clientSessionToken,
+	createdAt = createdAt,
+	assignedAt = assignedAt,
+	completedAt = completedAt
 )
 
 fun RequestModel.toDbEntity() = DbRequestEntity(
-    id = id,
-    clientSessionToken = clientSessionToken,
-    status = status.name,
-    departmentName = departmentName,
-    consultantName = consultantName,
-    canRemind = canRemind,
-    canReassign = canReassign,
-    createdAt = createdAt,
-    assignedAt = assignedAt
+	id = id,
+	storeId = storeId,
+	departmentId = departmentId,
+	departmentName = departmentName,
+	isEscalated = isEscalated,
+	assignedUserFirstName = assignedUserFirstName,
+	assignedUserLastName = assignedUserLastName,
+	status = status.name,
+	clientSessionToken = clientSessionToken,
+	createdAt = createdAt,
+	assignedAt = assignedAt,
+	completedAt = completedAt
 )

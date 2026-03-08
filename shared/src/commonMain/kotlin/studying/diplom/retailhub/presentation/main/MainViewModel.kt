@@ -1,21 +1,67 @@
 package studying.diplom.retailhub.presentation.main
 
 import cafe.adriel.voyager.core.model.ScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
+import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
+import studying.diplom.retailhub.presentation.main.requests.RequestsTab
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
-class MainViewModel : ScreenModel {
+class MainViewModel(
+    private val userRole: String? = null,
+    private val startShiftUseCase: StartShiftUseCase,
+    private val endShiftUseCase: EndShiftUseCase
+) : ScreenModel {
 
-    private val _state = MutableStateFlow(MainState())
+    private val _state = MutableStateFlow(
+        MainState(
+            currentTab = if (userRole == UserRoles.CONSULTANT.name) RequestsTab else EmployeesTab
+        )
+    )
     val state: StateFlow<MainState> = _state.asStateFlow()
+
+    init {
+        if (userRole == UserRoles.CONSULTANT.name) {
+            startShift()
+        }
+    }
+
+    private fun startShift() {
+        screenModelScope.launch {
+            startShiftUseCase()
+        }
+    }
+
+    private fun endShift() {
+        screenModelScope.launch {
+            endShiftUseCase()
+        }
+    }
 
     fun onEvent(event: MainEvent) {
         when (event) {
             is MainEvent.SelectTab -> {
                 _state.update { it.copy(currentTab = event.tab) }
             }
+            MainEvent.OnCloseApp, MainEvent.OnLogout -> {
+                if (userRole == UserRoles.CONSULTANT.name) {
+                    endShift()
+                }
+            }
         }
+    }
+
+    override fun onDispose() {
+        if (userRole == UserRoles.CONSULTANT.name) {
+            // В KMP onDispose вызывается при уничтожении ScreenModel (закрытие экрана/приложения)
+            // Но для гарантированного завершения лучше вызывать ивент явно
+        }
+        super.onDispose()
     }
 }

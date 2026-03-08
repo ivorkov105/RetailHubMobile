@@ -14,28 +14,43 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.CurrentTab
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
+import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.presentation.main.departments.department_list.DepartmentsListTab
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
 import studying.diplom.retailhub.presentation.main.profile.ProfileTab
+import studying.diplom.retailhub.presentation.main.requests.RequestsTab
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
-class MainScreen : Screen {
+class MainScreen(private val userRole: String? = null) : Screen {
 
     @Composable
     override fun Content() {
-        val screenModel: MainViewModel = getScreenModel()
+        val screenModel: MainViewModel = koinScreenModel { parametersOf(userRole) }
         val state by screenModel.state.collectAsState()
 
-        TabNavigator(EmployeesTab) { tabNavigator ->
+        DisposableEffect(Unit) {
+            onDispose {
+                screenModel.onEvent(MainEvent.OnCloseApp)
+            }
+        }
+
+        val initialTab = remember(userRole) {
+            if (userRole == UserRoles.CONSULTANT.name) RequestsTab else EmployeesTab
+        }
+
+        TabNavigator(initialTab) { tabNavigator ->
             Scaffold(
                 bottomBar = {
                     Column {
@@ -47,8 +62,12 @@ class MainScreen : Screen {
                             tonalElevation = 0.dp,
                             containerColor = MaterialTheme.colorScheme.surface
                         ) {
-                            TabNavigationItem(EmployeesTab, state, screenModel)
-                            TabNavigationItem(DepartmentsListTab, state, screenModel)
+                            if (userRole == UserRoles.MANAGER.name) {
+                                TabNavigationItem(EmployeesTab, state, screenModel)
+                                TabNavigationItem(DepartmentsListTab, state, screenModel)
+                            } else {
+                                TabNavigationItem(RequestsTab, state, screenModel)
+                            }
                             TabNavigationItem(ProfileTab, state, screenModel)
                         }
                     }

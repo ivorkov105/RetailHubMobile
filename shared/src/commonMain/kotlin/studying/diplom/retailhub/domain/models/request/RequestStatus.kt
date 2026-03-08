@@ -5,7 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class RequestStatus {
 	CREATED,
-	IN_PROGRESS,
+	WAITING,
+	ESCALATED,
+	ASSIGNED,
 	COMPLETED,
 	CANCELED
 }

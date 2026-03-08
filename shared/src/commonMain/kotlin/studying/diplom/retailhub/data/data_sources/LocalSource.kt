@@ -11,8 +11,18 @@ class LocalSource(database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
 
     // Requests
-    fun getRequests(): List<RequestEntity> {
-        return queries.getRequests().executeAsList()
+    fun getRequests(
+        status: String = "",
+        departmentId: String = "",
+        limit: Long = 20,
+        offset: Long = 0
+    ): List<RequestEntity> {
+        return queries.getRequests(
+            status = status,
+            departmentId = departmentId,
+            limit = limit,
+            offset = offset
+        ).executeAsList()
     }
 
     fun addRequests(newRequests: List<RequestEntity>) {
