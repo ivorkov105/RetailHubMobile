@@ -29,30 +29,39 @@ fun RequestsListItem(
     modifier: Modifier = Modifier
 ) {
 
-	val isAssigned = "${request.assignedUserFirstName} ${request.assignedUserLastName}".isNotEmpty()
+    val assignedFullName = listOfNotNull(request.assignedUserFirstName, request.assignedUserLastName)
+        .filter { it.isNotBlank() }
+        .joinToString(" ")
+        .trim()
 
-    val isAssignedToMe = request.status == RequestStatus.ASSIGNED &&
-            "${request.assignedUserFirstName} ${request.assignedUserLastName}".trim() == currentUserFullName.trim()
+    val isAssigned = assignedFullName.isNotEmpty()
+    val isAssignedToMe = isAssigned && assignedFullName.equals(currentUserFullName.trim(), ignoreCase = true)
 
-    val isEnabled = request.status == RequestStatus.CREATED ||
-            request.status == RequestStatus.WAITING ||
-            request.status == RequestStatus.ESCALATED && !isAssigned ||
-            isAssignedToMe
+    val isEnabled = when (request.status) {
+        RequestStatus.CREATED, RequestStatus.WAITING -> true
+        RequestStatus.ASSIGNED -> isAssignedToMe
+        RequestStatus.ESCALATED -> !isAssigned || isAssignedToMe
+        else -> false
+    }
 
     val buttonColor = when (request.status) {
         RequestStatus.COMPLETED -> Color(0xFF4CAF50) // Green
-        RequestStatus.ESCALATED -> Color(0xFFF44336) // Red
-        RequestStatus.ASSIGNED -> if (isAssignedToMe) Color(0xFF3DA9FC) else Color.Gray
         RequestStatus.CANCELED -> Color.Gray
+        RequestStatus.ASSIGNED -> if (isAssignedToMe) Color(0xFF3DA9FC) else Color.Gray
+        RequestStatus.ESCALATED -> if (isAssigned && !isAssignedToMe) Color.Gray else Color(0xFFF44336) // Red
         else -> MaterialTheme.colorScheme.primary
     }
 
     val buttonText = when (request.status) {
         RequestStatus.COMPLETED -> "Завершено"
-        RequestStatus.ASSIGNED -> if (isAssignedToMe) "Завершить" else "Принято"
-        RequestStatus.ESCALATED -> if (!isAssigned) "СРОЧНО" else "Занято"
         RequestStatus.CANCELED -> "Отменено"
         RequestStatus.WAITING -> "В ожидании"
+        RequestStatus.ASSIGNED -> if (isAssignedToMe) "Завершить" else "Принято"
+        RequestStatus.ESCALATED -> when {
+            isAssignedToMe -> "Завершить"
+            isAssigned -> "Занято"
+            else -> "СРОЧНО"
+        }
         else -> "Принять"
     }
 

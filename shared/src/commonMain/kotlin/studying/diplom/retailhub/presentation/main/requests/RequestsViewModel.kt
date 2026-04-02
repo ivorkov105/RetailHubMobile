@@ -51,6 +51,10 @@ class RequestsViewModel(
             }
             is RequestsEvent.OnAcceptRequest -> acceptRequest(event.requestId)
             is RequestsEvent.OnCompleteRequest -> completeRequest(event.requestId)
+            is RequestsEvent.OnDismissErrorDialog -> {
+                _state.update { it.copy(error = null) }
+                loadRequests(isRefresh = true)
+            }
         }
     }
 
@@ -107,13 +111,8 @@ class RequestsViewModel(
     private fun acceptRequest(requestId: String) {
         _state.update { it.copy(requestToAccept = null, isLoading = true) }
         screenModelScope.launch {
-            assignRequestUseCase(requestId).onSuccess { updatedRequest ->
-                _state.update { state ->
-                    val updatedList = state.requests.map { 
-                        if (it.id == updatedRequest.id) updatedRequest else it 
-                    }
-                    state.copy(requests = updatedList, isLoading = false)
-                }
+            assignRequestUseCase(requestId).onSuccess {
+                loadRequests(isRefresh = true)
             }.onFailure { throwable ->
                 _state.update { it.copy(
                     isLoading = false,
@@ -126,13 +125,8 @@ class RequestsViewModel(
     private fun completeRequest(requestId: String) {
         _state.update { it.copy(requestToComplete = null, isLoading = true) }
         screenModelScope.launch {
-            completeRequestUseCase(requestId).onSuccess { updatedRequest ->
-                _state.update { state ->
-                    val updatedList = state.requests.map { 
-                        if (it.id == updatedRequest.id) updatedRequest else it 
-                    }
-                    state.copy(requests = updatedList, isLoading = false)
-                }
+            completeRequestUseCase(requestId).onSuccess {
+                loadRequests(isRefresh = true)
             }.onFailure { throwable ->
                 _state.update { it.copy(
                     isLoading = false,

@@ -78,7 +78,14 @@ object RequestsTab : Tab {
                             request = request,
                             currentUserFullName = state.currentUserFullName,
                             onButtonClick = { 
-                                if (request.status == RequestStatus.ASSIGNED) {
+                                val assignedFullName = listOfNotNull(request.assignedUserFirstName, request.assignedUserLastName)
+                                    .filter { it.isNotBlank() }
+                                    .joinToString(" ")
+                                    .trim()
+                                val isAssignedToMe = assignedFullName.isNotEmpty() && 
+                                    assignedFullName.equals(state.currentUserFullName.trim(), ignoreCase = true)
+
+                                if (request.status == RequestStatus.ASSIGNED || (request.status == RequestStatus.ESCALATED && isAssignedToMe)) {
                                     screenModel.onEvent(RequestsEvent.OnShowCompleteDialog(request))
                                 } else {
                                     screenModel.onEvent(RequestsEvent.OnShowAcceptDialog(request))
@@ -155,13 +162,21 @@ object RequestsTab : Tab {
                 )
             }
 
+            // Диалоговое окно ошибки
             state.error?.let { error ->
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
+                AlertDialog(
+                    onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) },
+                    title = { Text(text = "Ошибка") },
+                    text = { Text(text = error) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { 
+                                screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) 
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
                 )
             }
         }

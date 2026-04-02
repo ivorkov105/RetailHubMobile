@@ -43,6 +43,15 @@ CREATE TABLE UserEntity (
     createdAt TEXT NOT NULL
 );
 
+CREATE TABLE QrCodeEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    departmentId TEXT NOT NULL,
+    label TEXT NOT NULL,
+    url TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
 -- Requests
 getRequests:
 SELECT * FROM RequestEntity
@@ -114,3 +123,17 @@ DELETE FROM UserEntity WHERE id = ?;
 
 removeAllUsers:
 DELETE FROM UserEntity;
+
+-- QR Codes
+getQrCodesByDepartment:
+SELECT * FROM QrCodeEntity WHERE departmentId = ?;
+
+insertQrCode:
+INSERT OR REPLACE INTO QrCodeEntity(id, storeId, departmentId, label, url, createdAt)
+VALUES ?;
+
+removeQrCode:
+DELETE FROM QrCodeEntity WHERE id = ?;
+
+removeAllQrCodes:
+DELETE FROM QrCodeEntity;

@@ -2,6 +2,7 @@ package studying.diplom.retailhub.data.data_sources.api
 
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.RequestListEntity
 import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
@@ -23,7 +24,9 @@ interface ApiClient {
     suspend fun completeRequest(requestId: String): Result<RequestEntity>
 
 	//Смены
+	suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>>
 	suspend fun startShift(): Result<ShiftEntity>
+	suspend fun getMyShifts(dateFrom: String, dateTo: String): Result<List<ShiftEntity>>
 	suspend fun endShift(): Result<ShiftEntity>
 
 	//Магазины и отделы
@@ -43,4 +46,10 @@ interface ApiClient {
 	suspend fun addUser(newUser: UserEntity): Result<Unit>
 	suspend fun updateUser(updatingUser: UserEntity): Result<UserEntity>
 	suspend fun deleteUser(deletingUser: UserEntity): Result<Unit>
+
+	// QR коды
+	suspend fun getQrCodes(departmentId: String): Result<List<QREntity>>
+	suspend fun postQrCode(departmentId: String, label: String): Result<QREntity>
+	suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray>
+	suspend fun deleteQrCode(qrCodeId: String): Result<Unit>
 }
