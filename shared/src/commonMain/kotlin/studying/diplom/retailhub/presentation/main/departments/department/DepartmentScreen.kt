@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.domain.models.shop.DepartmentModel
+import studying.diplom.retailhub.presentation.auth.AuthScreen
 import studying.diplom.retailhub.presentation.main.components.InfoBlock
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
 import studying.diplom.retailhub.resources.Res
@@ -61,6 +62,7 @@ class DepartmentScreen(
             screenModel.navigationEvents.collectLatest { event ->
                 when (event) {
                     DepartmentNavigationEvent.NavigateBack -> navigator.pop()
+                    DepartmentNavigationEvent.NavigateToAuth -> navigator.parent?.replace(AuthScreen())
                 }
             }
         }

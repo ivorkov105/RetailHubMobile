@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.data.repositories
 
-import com.russhwolf.settings.Settings
+import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
@@ -11,7 +11,7 @@ import studying.diplom.retailhub.domain.repositories.AuthRepository
 
 class AuthRepositoryImpl(
     private val apiClient: ApiClient,
-    private val settings: Settings
+    private val localSource: LocalSource
 ) : AuthRepository {
 
     override suspend fun login(phoneNumber: String, password: String): Result<TokenModel> {
@@ -23,7 +23,7 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun refreshToken(): Result<TokenModel> {
-        val currentRefreshToken = settings.getString(KEY_REFRESH_TOKEN, "")
+        val currentRefreshToken = localSource.getSession()?.refreshToken ?: ""
         val result = apiClient.refreshToken(currentRefreshToken)
         return result.map { entity ->
             saveTokens(entity)
@@ -32,25 +32,31 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun logout() {
-        settings.remove(KEY_ACCESS_TOKEN)
-        settings.remove(KEY_REFRESH_TOKEN)
+        localSource.clearSession()
     }
 
     override suspend fun getProfile(): Result<UserModel> {
-        return apiClient.getMe().map { it.toModel() }
+        return apiClient.getMe().map { 
+            val model = it.toModel()
+            localSource.updateUserRole(model.role)
+            model
+        }
     }
 
     override fun isAuthorized(): Boolean {
-        return settings.getString(KEY_ACCESS_TOKEN, "").isNotEmpty()
+        return localSource.getSession()?.accessToken?.isNotEmpty() ?: false
     }
 
-    private fun saveTokens(tokenEntity: TokenEntity) {
-        settings.putString(KEY_ACCESS_TOKEN, tokenEntity.accessToken)
-        settings.putString(KEY_REFRESH_TOKEN, tokenEntity.refreshToken)
+    override fun saveTokens(tokenEntity: TokenEntity) {
+        val currentSession = localSource.getSession()
+        localSource.saveSession(
+            accessToken = tokenEntity.accessToken,
+            refreshToken = tokenEntity.refreshToken,
+            userRole = currentSession?.userRole
+        )
     }
 
-    companion object {
-        private const val KEY_ACCESS_TOKEN = "access_token"
-        private const val KEY_REFRESH_TOKEN = "refresh_token"
+    override fun getSavedRole(): String? {
+        return localSource.getSession()?.userRole
     }
 }

@@ -1,5 +1,6 @@
 package studying.diplom.retailhub.domain.repositories
 
+import studying.diplom.retailhub.data.enteties.auth.TokenEntity
 import studying.diplom.retailhub.domain.models.auth.TokenModel
 import studying.diplom.retailhub.domain.models.user.UserModel
 
@@ -9,4 +10,6 @@ interface AuthRepository {
     suspend fun logout()
     suspend fun getProfile(): Result<UserModel>
     fun isAuthorized(): Boolean
+	fun saveTokens(tokenEntity: TokenEntity)
+    fun getSavedRole(): String?
 }

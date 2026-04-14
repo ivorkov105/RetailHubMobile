@@ -26,12 +26,6 @@ class MainViewModel(
     )
     val state: StateFlow<MainState> = _state.asStateFlow()
 
-    init {
-        if (userRole == UserRoles.CONSULTANT.name) {
-            startShift()
-        }
-    }
-
     private fun startShift() {
         screenModelScope.launch {
             startShiftUseCase()

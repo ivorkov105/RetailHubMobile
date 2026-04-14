@@ -162,6 +162,25 @@ object ProfileTab : Tab {
                         items(dashboardItems) { item ->
                             DashboardButton(item) { screenModel.onEvent(item.event) }
                         }
+                    } else if (state.user?.role == UserRoles.CONSULTANT.name) {
+                        item(span = { GridItemSpan(2) }) {
+                            Surface(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .clickable { screenModel.onEvent(ProfileEvent.OnEndShiftClick) },
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        "Завершить смену",
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
                     }
                     
                     item(span = { GridItemSpan(2) }) {

@@ -2,6 +2,7 @@ package studying.diplom.retailhub.presentation.main.profile
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,9 +11,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.shop.StoreModel
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
 import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
 
@@ -28,7 +31,8 @@ sealed class ProfileNavigationEvent {
 class ProfileViewModel(
     private val getProfileUseCase: GetProfileUseCase,
     private val getMyStoreUseCase: GetMyStoreUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val endShiftUseCase: EndShiftUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ProfileState())
@@ -74,6 +78,7 @@ class ProfileViewModel(
 				}
 			}
 	        ProfileEvent.OnQrClick               -> TODO()
+            ProfileEvent.OnEndShiftClick -> endShift()
         }
     }
 
@@ -84,10 +89,19 @@ class ProfileViewModel(
             val userResult = getProfileUseCase()
             val storeResult = getMyStoreUseCase()
 
+            if (userResult.isFailure) {
+                val error = userResult.exceptionOrNull()
+                if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
+                    logout()
+                    return@launch
+                }
+            }
+
             _state.update { it.copy(
                 user = userResult.getOrNull(),
                 store = storeResult.getOrNull(),
-                isLoading = false
+                isLoading = false,
+                error = userResult.exceptionOrNull()?.message ?: storeResult.exceptionOrNull()?.message
             ) }
         }
     }
@@ -96,6 +110,21 @@ class ProfileViewModel(
         screenModelScope.launch {
             logoutUseCase()
             _navigationEvents.emit(NavigateToAuth)
+        }
+    }
+
+    private fun endShift() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            endShiftUseCase().onSuccess {
+                logout()
+            }.onFailure { error ->
+                if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
+                    logout()
+                } else {
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                }
+            }
         }
     }
 }

@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.domain.models.user.UserModel
+import studying.diplom.retailhub.presentation.auth.AuthScreen
 import studying.diplom.retailhub.presentation.main.components.InfoBlock
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
@@ -46,6 +47,7 @@ class EmployeeScreen(
             screenModel.navigationEvents.collectLatest { event ->
                 when (event) {
                     EmployeeNavigationEvent.NavigateBack -> navigator.pop()
+                    EmployeeNavigationEvent.NavigateToAuth -> navigator.parent?.replace(AuthScreen())
                 }
             }
         }

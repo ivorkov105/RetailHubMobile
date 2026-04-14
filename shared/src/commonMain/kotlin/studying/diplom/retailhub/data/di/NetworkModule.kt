@@ -1,6 +1,5 @@
 package studying.diplom.retailhub.data.di
 
-import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -8,15 +7,21 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.header
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
+import studying.diplom.retailhub.data.data_sources.LocalSource
 
 val networkModule = module {
     single {
-        val settings = get<Settings>()
+        val localSource = get<LocalSource>()
         HttpClient {
+	        install(WebSockets) {
+		        contentConverter = KotlinxWebsocketSerializationConverter(Json)
+	        }
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true
@@ -39,9 +44,9 @@ val networkModule = module {
                 socketTimeoutMillis = 15000
             }
             defaultRequest {
-                url("http://185.221.199.141:80/")
+                url("http://83.147.255.205:8180/api/v1/")
                 
-                val token = settings.getString("access_token", "")
+                val token = localSource.getSession()?.accessToken ?: ""
                 if (token.isNotEmpty()) {
                     header("Authorization", "Bearer $token")
                 }

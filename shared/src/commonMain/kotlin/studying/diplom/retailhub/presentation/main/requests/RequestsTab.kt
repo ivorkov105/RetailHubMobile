@@ -162,7 +162,30 @@ object RequestsTab : Tab {
                 )
             }
 
-            // Диалоговое окно ошибки
+            if (state.showStartShiftDialog) {
+                AlertDialog(
+                    onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) },
+                    title = { Text(text = "Смена не начата") },
+                    text = { Text(text = "Чтобы принимать заявки, необходимо начать смену. Начать сейчас?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = { 
+                                screenModel.onEvent(RequestsEvent.OnConfirmStartShift) 
+                            }
+                        ) {
+                            Text("Да")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) }
+                        ) {
+                            Text("Нет")
+                        }
+                    }
+                )
+            }
+
             state.error?.let { error ->
                 AlertDialog(
                     onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) },

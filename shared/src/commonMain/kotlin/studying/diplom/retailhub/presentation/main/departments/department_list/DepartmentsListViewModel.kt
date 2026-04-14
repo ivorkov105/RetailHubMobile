@@ -2,6 +2,7 @@ package studying.diplom.retailhub.presentation.main.departments.department_list
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,11 +11,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.shop.DepartmentModel
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 
 sealed class DepartmentsListNavigationEvent {
     data class NavigateToDepartment(val department: DepartmentModel) : DepartmentsListNavigationEvent()
+    object NavigateToAuth : DepartmentsListNavigationEvent()
 }
 
 class DepartmentsListViewModel(
@@ -48,10 +51,14 @@ class DepartmentsListViewModel(
             getDepartmentsUseCase().onSuccess { result ->
                 _state.update { it.copy(departments = result, isLoading = false) }
             }.onFailure { throwable ->
-                _state.update { it.copy(
-                    isLoading = false,
-                    error = throwable.message ?: "Ошибка при загрузке отделов"
-                ) }
+                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.Unauthorized) {
+                    _navigationEvents.emit(DepartmentsListNavigationEvent.NavigateToAuth)
+                } else {
+                    _state.update { it.copy(
+                        isLoading = false,
+                        error = throwable.message ?: "Ошибка при загрузке отделов"
+                    ) }
+                }
             }
         }
     }

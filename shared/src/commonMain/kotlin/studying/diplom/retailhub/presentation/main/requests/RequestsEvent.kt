@@ -11,4 +11,6 @@ sealed interface RequestsEvent {
     data class OnAcceptRequest(val requestId: String) : RequestsEvent
     data class OnCompleteRequest(val requestId: String) : RequestsEvent
     data object OnDismissErrorDialog : RequestsEvent
+    data object OnConfirmStartShift : RequestsEvent
+    data object OnDismissStartShiftDialog : RequestsEvent
 }

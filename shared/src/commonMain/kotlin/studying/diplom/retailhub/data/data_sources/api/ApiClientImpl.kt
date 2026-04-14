@@ -38,6 +38,11 @@ data class ErrorResponse(
     val timestamp: String
 )
 
+class ApiException(
+    val statusCode: HttpStatusCode,
+    override val message: String
+) : Exception(message)
+
 class ApiClientImpl(
 	private val httpClient: HttpClient
 ) : ApiClient {
@@ -54,7 +59,7 @@ class ApiClientImpl(
         } catch (e: Exception) {
             "Ошибка сервера: ${status.value}"
         }
-        throw Exception(errorMessage)
+        throw ApiException(status, errorMessage)
     }
 
 	override suspend fun login(request: LoginRequestEntity): Result<TokenEntity> = runCatching {

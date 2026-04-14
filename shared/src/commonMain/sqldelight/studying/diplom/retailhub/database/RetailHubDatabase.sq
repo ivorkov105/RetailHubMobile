@@ -52,6 +52,13 @@ CREATE TABLE QrCodeEntity (
     createdAt TEXT NOT NULL
 );
 
+CREATE TABLE SessionEntity (
+    id INTEGER PRIMARY KEY CHECK (id = 0),
+    accessToken TEXT NOT NULL,
+    refreshToken TEXT NOT NULL,
+    userRole TEXT
+);
+
 -- Requests
 getRequests:
 SELECT * FROM RequestEntity
@@ -137,3 +144,17 @@ DELETE FROM QrCodeEntity WHERE id = ?;
 
 removeAllQrCodes:
 DELETE FROM QrCodeEntity;
+
+-- Session
+getSession:
+SELECT * FROM SessionEntity LIMIT 1;
+
+saveSession:
+INSERT OR REPLACE INTO SessionEntity(id, accessToken, refreshToken, userRole)
+VALUES (0, ?, ?, ?);
+
+updateUserRole:
+UPDATE SessionEntity SET userRole = ? WHERE id = 0;
+
+removeSession:
+DELETE FROM SessionEntity;

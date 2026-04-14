@@ -2,6 +2,7 @@ package studying.diplom.retailhub.presentation.main.departments.department
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.shop.DepartmentModel
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.AddDepartmentUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.DeleteDepartmentUseCase
@@ -18,6 +20,7 @@ import studying.diplom.retailhub.domain.use_cases.store_use_cases.UpdateDepartme
 
 sealed class DepartmentNavigationEvent {
 	object NavigateBack : DepartmentNavigationEvent()
+    object NavigateToAuth : DepartmentNavigationEvent()
 }
 
 class DepartmentViewModel(
@@ -33,6 +36,16 @@ class DepartmentViewModel(
 
 	private val _navigationEvents = MutableSharedFlow<DepartmentNavigationEvent>()
 	val navigationEvents: SharedFlow<DepartmentNavigationEvent> = _navigationEvents.asSharedFlow()
+
+    private fun handleError(throwable: Throwable) {
+        if (throwable is ApiException && throwable.statusCode == HttpStatusCode.Unauthorized) {
+            screenModelScope.launch {
+                _navigationEvents.emit(DepartmentNavigationEvent.NavigateToAuth)
+            }
+        } else {
+            _state.update { it.copy(isLoading = false, error = throwable.message ?: "Произошла ошибка") }
+        }
+    }
 
 	fun onEvent(event: DepartmentEvent) {
 		when (event) {
@@ -69,9 +82,7 @@ class DepartmentViewModel(
 						)
 					}
 				}
-				.onFailure { throwable ->
-					_state.update { it.copy(isLoading = false, error = throwable.message) }
-				}
+				.onFailure { handleError(it) }
 		}
 	}
 
@@ -89,9 +100,7 @@ class DepartmentViewModel(
 			addDepartmentUseCase(departmentData).onSuccess {
 				_state.update { it.copy(isLoading = false) }
 				_navigationEvents.emit(DepartmentNavigationEvent.NavigateBack)
-			}.onFailure { throwable ->
-				_state.update { it.copy(isLoading = false, error = throwable.message) }
-			}
+			}.onFailure { handleError(it) }
 		}
 	}
 
@@ -104,9 +113,7 @@ class DepartmentViewModel(
 			updateDepartmentUseCase(departmentData).onSuccess {
 				_state.update { it.copy(isLoading = false) }
 				_navigationEvents.emit(DepartmentNavigationEvent.NavigateBack)
-			}.onFailure { throwable ->
-				_state.update { it.copy(isLoading = false, error = throwable.message) }
-			}
+			}.onFailure { handleError(it) }
 		}
 	}
 
@@ -117,9 +124,7 @@ class DepartmentViewModel(
 			deleteDepartmentUseCase(departmentData).onSuccess {
 				_state.update { it.copy(isLoading = false) }
 				_navigationEvents.emit(DepartmentNavigationEvent.NavigateBack)
-			}.onFailure { throwable ->
-				_state.update { it.copy(isLoading = false, error = throwable.message) }
-			}
+			}.onFailure { handleError(it) }
 		}
 	}
 }

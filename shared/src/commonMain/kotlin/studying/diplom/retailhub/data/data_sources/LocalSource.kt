@@ -6,6 +6,7 @@ import studying.diplom.retailhub.database.RequestEntity
 import studying.diplom.retailhub.database.StoreEntity
 import studying.diplom.retailhub.database.DepartmentEntity
 import studying.diplom.retailhub.database.UserEntity
+import studying.diplom.retailhub.database.SessionEntity
 
 class LocalSource(database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
@@ -95,6 +96,23 @@ class LocalSource(database: RetailHubDatabase) {
 	fun saveUser(user: UserEntity) = queries.insertUser(user)
 
 	fun deleteUser(id: String) = queries.removeUser(id)
+
+    // Session
+    fun getSession(): SessionEntity? {
+        return queries.getSession().executeAsOneOrNull()
+    }
+
+    fun saveSession(accessToken: String, refreshToken: String, userRole: String?) {
+        queries.saveSession(accessToken, refreshToken, userRole)
+    }
+
+    fun updateUserRole(userRole: String) {
+        queries.updateUserRole(userRole)
+    }
+
+    fun clearSession() {
+        queries.removeSession()
+    }
 }
 
 interface DatabaseDriverFactory {

@@ -6,6 +6,7 @@ import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.RemoteSource
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.data_sources.api.ApiClientImpl
+import studying.diplom.retailhub.data.data_sources.api.StompService
 import studying.diplom.retailhub.data.repositories.AuthRepositoryImpl
 import studying.diplom.retailhub.data.repositories.RequestRepositoryImpl
 import studying.diplom.retailhub.data.repositories.ShiftRepositoryImpl
@@ -28,6 +29,8 @@ val dataModule = module {
     
     single { LocalSource(get()) }
     single { RemoteSource(get()) }
+
+    single { StompService(get(), get()) }
 
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
     single<RequestRepository> { RequestRepositoryImpl(get(), get()) }

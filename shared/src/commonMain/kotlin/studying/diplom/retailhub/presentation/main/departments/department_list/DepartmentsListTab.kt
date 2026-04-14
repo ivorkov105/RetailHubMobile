@@ -22,6 +22,7 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
+import studying.diplom.retailhub.presentation.auth.AuthScreen
 import studying.diplom.retailhub.presentation.main.components.BaseListItem
 import studying.diplom.retailhub.presentation.main.departments.department.DepartmentScreen
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
@@ -57,6 +58,9 @@ object DepartmentsListTab : Tab {
                 when (event) {
                     is DepartmentsListNavigationEvent.NavigateToDepartment -> {
                         navigator.parent?.push(DepartmentScreen(event.department, ScreenMode.SHOW))
+                    }
+                    DepartmentsListNavigationEvent.NavigateToAuth -> {
+                        navigator.parent?.replace(AuthScreen())
                     }
                 }
             }

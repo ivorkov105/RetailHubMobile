@@ -3,6 +3,7 @@ package studying.diplom.retailhub.data.data_sources
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.RequestListEntity
 import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
@@ -49,8 +50,19 @@ class RemoteSource(
         return apiClient.completeRequest(requestId)
     }
 
+	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> {
+		TODO("Not yet implemented")
+	}
+
 	override suspend fun startShift(): Result<ShiftEntity> {
 		return apiClient.startShift()
+	}
+
+	override suspend fun getMyShifts(
+		dateFrom: String,
+		dateTo: String
+	): Result<List<ShiftEntity>> {
+		TODO("Not yet implemented")
 	}
 
 	override suspend fun endShift(): Result<ShiftEntity> {
@@ -107,5 +119,24 @@ class RemoteSource(
 
 	override suspend fun deleteUser(deletingUser: UserEntity): Result<Unit> {
 		return apiClient.deleteUser(deletingUser)
+	}
+
+	override suspend fun getQrCodes(departmentId: String): Result<List<QREntity>> {
+		TODO("Not yet implemented")
+	}
+
+	override suspend fun postQrCode(
+		departmentId: String,
+		label: String
+	): Result<QREntity> {
+		TODO("Not yet implemented")
+	}
+
+	override suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray> {
+		TODO("Not yet implemented")
+	}
+
+	override suspend fun deleteQrCode(qrCodeId: String): Result<Unit> {
+		TODO("Not yet implemented")
 	}
 }

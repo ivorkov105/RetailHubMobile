@@ -2,6 +2,7 @@ package studying.diplom.retailhub.presentation.main.employees.employee
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.user.UserModel
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.AddUserUseCase
@@ -20,6 +22,7 @@ import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 sealed class EmployeeNavigationEvent {
     object NavigateBack : EmployeeNavigationEvent()
+    object NavigateToAuth : EmployeeNavigationEvent()
 }
 
 class EmployeeViewModel(
@@ -56,6 +59,16 @@ class EmployeeViewModel(
         loadDepartments()
     }
 
+    private fun handleError(throwable: Throwable) {
+        if (throwable is ApiException && throwable.statusCode == HttpStatusCode.Unauthorized) {
+            screenModelScope.launch {
+                _navigationEvents.emit(EmployeeNavigationEvent.NavigateToAuth)
+            }
+        } else {
+            _state.update { it.copy(isLoading = false, error = throwable.message ?: "Произошла ошибка") }
+        }
+    }
+
     fun onEvent(event: EmployeeEvent) {
         when (event) {
             is EmployeeEvent.OnLoadEmployee -> loadEmployee()
@@ -90,9 +103,7 @@ class EmployeeViewModel(
         screenModelScope.launch {
             getDepartmentsUseCase().onSuccess { departments ->
                 _state.update { it.copy(availableDepartments = departments) }
-            }.onFailure { t ->
-                _state.update { it.copy(error = t.message) }
-            }
+            }.onFailure { handleError(it) }
         }
     }
 
@@ -104,9 +115,7 @@ class EmployeeViewModel(
             _state.update { it.copy(isLoading = true, error = null) }
             getUserUseCase(id).onSuccess { user ->
                 _state.update { it.copy(data = user, isLoading = false) }
-            }.onFailure { t ->
-                _state.update { it.copy(isLoading = false, error = t.message) }
-            }
+            }.onFailure { handleError(it) }
         }
     }
 
@@ -132,9 +141,7 @@ class EmployeeViewModel(
             addUserUseCase(userData).onSuccess {
                 _state.update { it.copy(isLoading = false) }
                 _navigationEvents.emit(EmployeeNavigationEvent.NavigateBack)
-            }.onFailure { t ->
-                _state.update { it.copy(isLoading = false, error = t.message) }
-            }
+            }.onFailure { handleError(it) }
         }
     }
 
@@ -145,9 +152,7 @@ class EmployeeViewModel(
             updateUserUseCase(userData).onSuccess {
                 _state.update { it.copy(isLoading = false) }
                 _navigationEvents.emit(EmployeeNavigationEvent.NavigateBack)
-            }.onFailure { t ->
-                _state.update { it.copy(isLoading = false, error = t.message) }
-            }
+            }.onFailure { handleError(it) }
         }
     }
 
@@ -158,9 +163,7 @@ class EmployeeViewModel(
             deleteUserUseCase(userData).onSuccess {
                 _state.update { it.copy(isLoading = false) }
                 _navigationEvents.emit(EmployeeNavigationEvent.NavigateBack)
-            }.onFailure { t ->
-                _state.update { it.copy(isLoading = false, error = t.message) }
-            }
+            }.onFailure { handleError(it) }
         }
     }
 }

@@ -2,21 +2,31 @@ package studying.diplom.retailhub.presentation.main.requests
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.api.ApiException
+import studying.diplom.retailhub.data.data_sources.api.StompService
+import studying.diplom.retailhub.data.mappers.toModel
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.GetRequestsUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 class RequestsViewModel(
     private val getRequestsUseCase: GetRequestsUseCase,
     private val assignRequestUseCase: AssignRequestUseCase,
     private val completeRequestUseCase: CompleteRequestUseCase,
-    private val getProfileUseCase: GetProfileUseCase
+    private val getProfileUseCase: GetProfileUseCase,
+    private val startShiftUseCase: StartShiftUseCase,
+    private val stompService: StompService
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(RequestsState())
@@ -24,14 +34,44 @@ class RequestsViewModel(
 
     init {
         loadProfile()
+        observeWebSocketUpdates()
     }
 
     private fun loadProfile() {
         screenModelScope.launch {
             getProfileUseCase().onSuccess { user ->
                 _state.update { it.copy(currentUserFullName = "${user.firstName} ${user.lastName}") }
+                
+                // Подключаемся к WebSocket после получения профиля
+                stompService.connect()
+                
+                if (user.role == UserRoles.MANAGER.name) {
+                    stompService.subscribeToStore(user.storeId)
+                } else if (user.role == UserRoles.CONSULTANT.name) {
+                    user.departments.forEach { dept ->
+                        stompService.subscribeToDepartment(dept.id)
+                    }
+                }
             }
         }
+    }
+
+    private fun observeWebSocketUpdates() {
+        stompService.requestUpdates
+            .onEach { entity ->
+                val updatedRequest = entity.toModel()
+                _state.update { state ->
+                    val newList = state.requests.toMutableList()
+                    val index = newList.indexOfFirst { it.id == updatedRequest.id }
+                    if (index != -1) {
+                        newList[index] = updatedRequest
+                    } else {
+                        newList.add(0, updatedRequest)
+                    }
+                    state.copy(requests = newList)
+                }
+            }
+            .launchIn(screenModelScope)
     }
 
     fun onEvent(event: RequestsEvent) {
@@ -54,6 +94,10 @@ class RequestsViewModel(
             is RequestsEvent.OnDismissErrorDialog -> {
                 _state.update { it.copy(error = null) }
                 loadRequests(isRefresh = true)
+            }
+            is RequestsEvent.OnConfirmStartShift -> startShift()
+            is RequestsEvent.OnDismissStartShiftDialog -> {
+                _state.update { it.copy(showStartShiftDialog = false) }
             }
         }
     }
@@ -114,9 +158,28 @@ class RequestsViewModel(
             assignRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
+                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.BadRequest) {
+                    _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
+                } else {
+                    _state.update { it.copy(
+                        isLoading = false,
+                        error = throwable.message ?: "Не удалось принять заявку"
+                    ) }
+                }
+            }
+        }
+    }
+
+    private fun startShift() {
+        _state.update { it.copy(showStartShiftDialog = false, isLoading = true) }
+        screenModelScope.launch {
+            startShiftUseCase().onSuccess {
+                _state.update { it.copy(isLoading = false) }
+                loadRequests(isRefresh = true)
+            }.onFailure { throwable ->
                 _state.update { it.copy(
                     isLoading = false,
-                    error = throwable.message ?: "Не удалось принять заявку"
+                    error = throwable.message ?: "Не удалось начать смену"
                 ) }
             }
         }
@@ -128,10 +191,14 @@ class RequestsViewModel(
             completeRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
-                _state.update { it.copy(
-                    isLoading = false,
-                    error = throwable.message ?: "Не удалось завершить заявку"
-                ) }
+                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.BadRequest) {
+                    _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
+                } else {
+                    _state.update { it.copy(
+                        isLoading = false,
+                        error = throwable.message ?: "Не удалось завершить заявку"
+                    ) }
+                }
             }
         }
     }
@@ -144,5 +211,10 @@ class RequestsViewModel(
     fun onDepartmentFilterChanged(departmentId: String) {
         _state.update { it.copy(departmentFilter = departmentId) }
         loadRequests()
+    }
+
+    override fun onDispose() {
+        stompService.disconnect()
+        super.onDispose()
     }
 }

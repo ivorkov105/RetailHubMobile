@@ -2,6 +2,9 @@ package studying.diplom.retailhub.domain.di
 
 import org.koin.dsl.module
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
+import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetSavedRoleUseCase
+import studying.diplom.retailhub.domain.use_cases.auth_use_cases.IsAuthorizedUseCase
+import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LoginUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AddRequestsUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
@@ -39,8 +42,11 @@ val useCaseModule = module {
 	factory { UpdateDepartmentUseCase(get()) }
 	factory { DeleteDepartmentUseCase(get()) }
 
+	factory { LoginUseCase(get()) }
 	factory { GetProfileUseCase(get()) }
 	factory { LogoutUseCase(get()) }
+	factory { IsAuthorizedUseCase(get()) }
+	factory { GetSavedRoleUseCase(get()) }
 
 	factory { GetStoreUsersUseCase(get()) }
 	factory { GetUserUseCase(get()) }

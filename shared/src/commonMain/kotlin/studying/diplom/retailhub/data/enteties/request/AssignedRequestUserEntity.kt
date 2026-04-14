@@ -5,11 +5,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AssignedRequestUserEntity(
-
-	@SerialName("first_name")
-	val firstName: String = "",
-
-	@SerialName("last_name")
-	val lastName: String = "",
-
+    @SerialName("id")
+    val id: String = "",
+    @SerialName("first_name")
+    val firstName: String = "",
+    @SerialName("last_name")
+    val lastName: String = ""
 )
