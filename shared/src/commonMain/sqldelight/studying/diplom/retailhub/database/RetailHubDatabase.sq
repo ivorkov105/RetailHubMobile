@@ -1,5 +1,3 @@
-import kotlin.Boolean;
-
 CREATE TABLE RequestEntity (
     id TEXT NOT NULL PRIMARY KEY,
     storeId TEXT NOT NULL,
@@ -49,6 +47,14 @@ CREATE TABLE QrCodeEntity (
     departmentId TEXT NOT NULL,
     label TEXT NOT NULL,
     url TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE NotificationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    isRead INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL
 );
 
@@ -144,6 +150,20 @@ DELETE FROM QrCodeEntity WHERE id = ?;
 
 removeAllQrCodes:
 DELETE FROM QrCodeEntity;
+
+-- Notifications
+getNotifications:
+SELECT * FROM NotificationEntity ORDER BY createdAt DESC;
+
+insertNotification:
+INSERT OR REPLACE INTO NotificationEntity(id, title, body, isRead, createdAt)
+VALUES ?;
+
+markNotificationAsRead:
+UPDATE NotificationEntity SET isRead = 1 WHERE id = ?;
+
+removeAllNotifications:
+DELETE FROM NotificationEntity;
 
 -- Session
 getSession:

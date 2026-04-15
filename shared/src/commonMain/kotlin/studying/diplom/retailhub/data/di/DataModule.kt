@@ -7,17 +7,10 @@ import studying.diplom.retailhub.data.data_sources.RemoteSource
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
 import studying.diplom.retailhub.data.data_sources.api.ApiClientImpl
 import studying.diplom.retailhub.data.data_sources.api.StompService
-import studying.diplom.retailhub.data.repositories.AuthRepositoryImpl
-import studying.diplom.retailhub.data.repositories.RequestRepositoryImpl
-import studying.diplom.retailhub.data.repositories.ShiftRepositoryImpl
-import studying.diplom.retailhub.data.repositories.StoreRepositoryImpl
-import studying.diplom.retailhub.data.repositories.UserRepositoryImpl
+import studying.diplom.retailhub.data.data_sources.api.WSService
+import studying.diplom.retailhub.data.repositories.*
 import studying.diplom.retailhub.database.RetailHubDatabase
-import studying.diplom.retailhub.domain.repositories.AuthRepository
-import studying.diplom.retailhub.domain.repositories.RequestRepository
-import studying.diplom.retailhub.domain.repositories.ShiftRepository
-import studying.diplom.retailhub.domain.repositories.StoreRepository
-import studying.diplom.retailhub.domain.repositories.UserRepository
+import studying.diplom.retailhub.domain.repositories.*
 
 val dataModule = module {
     single {
@@ -30,11 +23,14 @@ val dataModule = module {
     single { LocalSource(get()) }
     single { RemoteSource(get()) }
 
-    single { StompService(get(), get()) }
+    single<WSService> { StompService(get(), get()) }
 
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
-    single<RequestRepository> { RequestRepositoryImpl(get(), get()) }
+    single<RequestRepository> { RequestRepositoryImpl(get(), get(), get()) }
     single<StoreRepository> { StoreRepositoryImpl(get(), get()) }
 	single<UserRepository> { UserRepositoryImpl(get(), get()) }
 	single<ShiftRepository> { ShiftRepositoryImpl(get()) }
+    single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
+    single<AnalyticsRepository> { AnalyticsRepositoryImpl(get()) }
+    single<DeviceRepository> { DeviceRepositoryImpl(get()) }
 }

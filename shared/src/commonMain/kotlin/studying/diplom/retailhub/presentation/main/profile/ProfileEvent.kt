@@ -9,5 +9,6 @@ sealed class ProfileEvent {
 	object OnCreateDepartmentClick : ProfileEvent()
 	object OnCreateEmployeeClick : ProfileEvent()
 	object OnQrClick : ProfileEvent()
+    object OnStartShiftClick : ProfileEvent()
     object OnEndShiftClick : ProfileEvent()
 }

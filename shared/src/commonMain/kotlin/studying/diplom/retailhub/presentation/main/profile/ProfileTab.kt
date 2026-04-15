@@ -163,19 +163,38 @@ object ProfileTab : Tab {
                             DashboardButton(item) { screenModel.onEvent(item.event) }
                         }
                     } else if (state.user?.role == UserRoles.CONSULTANT.name) {
+                        val status = state.user?.currentStatus ?: "OFFLINE"
+                        val isBusy = status == "BUSY"
+                        val isOffline = status == "OFFLINE"
+                        val accentColor = Color(0xFF00A3FF)
+
                         item(span = { GridItemSpan(2) }) {
                             Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(56.dp)
-                                    .clickable { screenModel.onEvent(ProfileEvent.OnEndShiftClick) },
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                shape = RoundedCornerShape(12.dp)
+                                    .then(
+                                        if (isBusy) Modifier 
+                                        else Modifier.clickable { 
+                                            if (isOffline) screenModel.onEvent(ProfileEvent.OnStartShiftClick)
+                                            else screenModel.onEvent(ProfileEvent.OnEndShiftClick)
+                                        }
+                                    ),
+                                color = if (isOffline) accentColor else Color.Transparent,
+                                shape = RoundedCornerShape(12.dp),
+                                border = if (!isOffline) androidx.compose.foundation.BorderStroke(
+                                    1.dp, 
+                                    if (isBusy) Color.Gray else accentColor
+                                ) else null
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(
-                                        "Завершить смену",
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        text = if (isOffline) "Начать смену" else "Завершить смену",
+                                        color = when {
+                                            isOffline -> Color.White
+                                            isBusy -> Color.Gray
+                                            else -> accentColor
+                                        },
                                         fontWeight = FontWeight.Bold
                                     )
                                 }

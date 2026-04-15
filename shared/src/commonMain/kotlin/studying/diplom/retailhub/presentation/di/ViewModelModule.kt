@@ -16,7 +16,7 @@ val viewModelModule = module {
 	factory { RequestsViewModel(get(), get(), get(), get(), get(), get()) }
 	factory { AuthViewModel(get(), get()) }
 	factory { params -> MainViewModel(params.getOrNull(), get(), get()) }
-	factory { ProfileViewModel(get(), get(), get(), get()) }
+	factory { ProfileViewModel(get(), get(), get(), get(), get()) }
 	factory { params -> CreateStoreViewModel(get(), get(), params.getOrNull()) }
 	factory { MyStoreViewModel(get()) }
 	factory { params -> DepartmentViewModel(get(), get(), get(), get(), params.getOrNull()) }

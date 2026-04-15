@@ -1,8 +1,13 @@
 package studying.diplom.retailhub.data.data_sources
 
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
+import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
+import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
 import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.RequestListEntity
@@ -51,7 +56,7 @@ class RemoteSource(
     }
 
 	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> {
-		TODO("Not yet implemented")
+		return apiClient.getEmployeesAtShift()
 	}
 
 	override suspend fun startShift(): Result<ShiftEntity> {
@@ -62,7 +67,7 @@ class RemoteSource(
 		dateFrom: String,
 		dateTo: String
 	): Result<List<ShiftEntity>> {
-		TODO("Not yet implemented")
+		return apiClient.getMyShifts(dateFrom, dateTo)
 	}
 
 	override suspend fun endShift(): Result<ShiftEntity> {
@@ -122,21 +127,58 @@ class RemoteSource(
 	}
 
 	override suspend fun getQrCodes(departmentId: String): Result<List<QREntity>> {
-		TODO("Not yet implemented")
+		return apiClient.getQrCodes(departmentId)
 	}
 
 	override suspend fun postQrCode(
 		departmentId: String,
 		label: String
 	): Result<QREntity> {
-		TODO("Not yet implemented")
+		return apiClient.postQrCode(departmentId, label)
 	}
 
 	override suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray> {
-		TODO("Not yet implemented")
+		return apiClient.downloadQrCode(qrCodeId)
 	}
 
 	override suspend fun deleteQrCode(qrCodeId: String): Result<Unit> {
-		TODO("Not yet implemented")
+		return apiClient.deleteQrCode(qrCodeId)
 	}
+
+    override suspend fun getNotifications(): Result<NotificationListEntity> {
+        return apiClient.getNotifications()
+    }
+
+    override suspend fun markNotificationAsRead(notificationId: String): Result<Unit> {
+        return apiClient.markNotificationAsRead(notificationId)
+    }
+
+    override suspend fun registerDevice(device: DeviceEntity): Result<Unit> {
+        return apiClient.registerDevice(device)
+    }
+
+    override suspend fun deleteDevice(deviceId: String): Result<Unit> {
+        return apiClient.deleteDevice(deviceId)
+    }
+
+    override suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity> {
+        return apiClient.getAnalyticsDashboard()
+    }
+
+    override suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>> {
+        return apiClient.getConsultantsStats()
+    }
+
+    override suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity> {
+        return apiClient.getConsultantDetailStats(userId)
+    }
+
+    override suspend fun getRequestsHistory(
+        dateFrom: String,
+        dateTo: String,
+        page: Int,
+        size: Int
+    ): Result<RequestListEntity> {
+        return apiClient.getRequestsHistory(dateFrom, dateTo, page, size)
+    }
 }

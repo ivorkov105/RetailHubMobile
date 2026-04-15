@@ -1,7 +1,13 @@
 package studying.diplom.retailhub.data.data_sources.api
 
+import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
+import studying.diplom.retailhub.data.enteties.notifications.NotificationEntity
+import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
 import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.RequestListEntity
@@ -52,4 +58,18 @@ interface ApiClient {
 	suspend fun postQrCode(departmentId: String, label: String): Result<QREntity>
 	suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray>
 	suspend fun deleteQrCode(qrCodeId: String): Result<Unit>
+
+    // Уведомления
+    suspend fun getNotifications(): Result<NotificationListEntity>
+    suspend fun markNotificationAsRead(notificationId: String): Result<Unit>
+
+    // Устройства (FCM)
+    suspend fun registerDevice(device: DeviceEntity): Result<Unit>
+    suspend fun deleteDevice(deviceId: String): Result<Unit>
+
+    // Аналитика (MANAGER)
+    suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity>
+    suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>>
+    suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity>
+    suspend fun getRequestsHistory(dateFrom: String, dateTo: String, page: Int, size: Int): Result<RequestListEntity>
 }

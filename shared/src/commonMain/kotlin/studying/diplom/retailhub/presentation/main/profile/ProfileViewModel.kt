@@ -16,6 +16,7 @@ import studying.diplom.retailhub.domain.models.shop.StoreModel
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
 import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
 
@@ -32,6 +33,7 @@ class ProfileViewModel(
     private val getProfileUseCase: GetProfileUseCase,
     private val getMyStoreUseCase: GetMyStoreUseCase,
     private val logoutUseCase: LogoutUseCase,
+    private val startShiftUseCase: StartShiftUseCase,
     private val endShiftUseCase: EndShiftUseCase
 ) : ScreenModel {
 
@@ -78,7 +80,8 @@ class ProfileViewModel(
 				}
 			}
 	        ProfileEvent.OnQrClick               -> TODO()
-            ProfileEvent.OnEndShiftClick -> endShift()
+            ProfileEvent.OnStartShiftClick       -> startShift()
+            ProfileEvent.OnEndShiftClick         -> endShift()
         }
     }
 
@@ -113,18 +116,33 @@ class ProfileViewModel(
         }
     }
 
+    private fun startShift() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            startShiftUseCase().onSuccess {
+                loadProfile()
+            }.onFailure { error ->
+                handleShiftError(error)
+            }
+        }
+    }
+
     private fun endShift() {
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             endShiftUseCase().onSuccess {
-                logout()
+                loadProfile()
             }.onFailure { error ->
-                if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
-                    logout()
-                } else {
-                    _state.update { it.copy(isLoading = false, error = error.message) }
-                }
+                handleShiftError(error)
             }
+        }
+    }
+
+    private fun handleShiftError(error: Throwable) {
+        if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
+            logout()
+        } else {
+            _state.update { it.copy(isLoading = false, error = error.message) }
         }
     }
 }

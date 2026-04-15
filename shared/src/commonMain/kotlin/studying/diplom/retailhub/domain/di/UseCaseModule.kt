@@ -1,25 +1,20 @@
 package studying.diplom.retailhub.domain.di
 
 import org.koin.dsl.module
-import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
-import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetSavedRoleUseCase
-import studying.diplom.retailhub.domain.use_cases.auth_use_cases.IsAuthorizedUseCase
-import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LoginUseCase
-import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetAnalyticsDashboardUseCase
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantDetailStatsUseCase
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantsStatsUseCase
+import studying.diplom.retailhub.domain.use_cases.auth_use_cases.*
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.GetNotificationsUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.MarkNotificationReadUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.RefreshNotificationsUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AddRequestsUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.GetRequestsUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.AddDepartmentUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.AddStoreUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.DeleteDepartmentUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.UpdateDepartmentUseCase
-import studying.diplom.retailhub.domain.use_cases.store_use_cases.UpdateMyStoreUseCase
+import studying.diplom.retailhub.domain.use_cases.store_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.AddUserUseCase
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.DeleteUserUseCase
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.GetStoreUsersUseCase
@@ -56,4 +51,12 @@ val useCaseModule = module {
 
 	factory { StartShiftUseCase(get()) }
 	factory { EndShiftUseCase(get()) }
+
+    factory { GetNotificationsUseCase(get()) }
+    factory { RefreshNotificationsUseCase(get()) }
+    factory { MarkNotificationReadUseCase(get()) }
+
+    factory { GetAnalyticsDashboardUseCase(get()) }
+    factory { GetConsultantsStatsUseCase(get()) }
+    factory { GetConsultantDetailStatsUseCase(get()) }
 }

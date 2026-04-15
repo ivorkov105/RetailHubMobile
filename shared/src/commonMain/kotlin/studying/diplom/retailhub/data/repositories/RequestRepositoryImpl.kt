@@ -1,7 +1,10 @@
 package studying.diplom.retailhub.data.repositories
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.RemoteSource
+import studying.diplom.retailhub.data.data_sources.api.WSService
 import studying.diplom.retailhub.data.mappers.toApiEntity
 import studying.diplom.retailhub.data.mappers.toDbEntity
 import studying.diplom.retailhub.data.mappers.toModel
@@ -10,7 +13,8 @@ import studying.diplom.retailhub.domain.repositories.RequestRepository
 
 class RequestRepositoryImpl(
 	private val remoteSource: RemoteSource,
-	private val localSource: LocalSource
+	private val localSource: LocalSource,
+    private val wsService: WSService
 ) : RequestRepository {
 
 	override suspend fun getRequests(
@@ -80,4 +84,24 @@ class RequestRepositoryImpl(
 			onFailure = { Result.failure(it) }
 		)
 	}
+
+    override fun observeRequestUpdates(): Flow<RequestModel> {
+        return wsService.requestUpdates.map { it.toModel() }
+    }
+
+    override fun connectToWebSocket() {
+        wsService.connect()
+    }
+
+    override fun disconnectFromWebSocket() {
+        wsService.disconnect()
+    }
+
+    override fun subscribeToStore(storeId: String) {
+        wsService.subscribeToStore(storeId)
+    }
+
+    override fun subscribeToDepartment(departmentId: String) {
+        wsService.subscribeToDepartment(departmentId)
+    }
 }

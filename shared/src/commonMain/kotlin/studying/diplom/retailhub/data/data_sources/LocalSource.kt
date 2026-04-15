@@ -7,6 +7,7 @@ import studying.diplom.retailhub.database.StoreEntity
 import studying.diplom.retailhub.database.DepartmentEntity
 import studying.diplom.retailhub.database.UserEntity
 import studying.diplom.retailhub.database.SessionEntity
+import studying.diplom.retailhub.database.NotificationEntity
 
 class LocalSource(database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
@@ -96,6 +97,22 @@ class LocalSource(database: RetailHubDatabase) {
 	fun saveUser(user: UserEntity) = queries.insertUser(user)
 
 	fun deleteUser(id: String) = queries.removeUser(id)
+
+    // Notifications
+    fun getNotifications(): List<NotificationEntity> {
+        return queries.getNotifications().executeAsList()
+    }
+
+    fun saveNotifications(notifications: List<NotificationEntity>) {
+        queries.transaction {
+            queries.removeAllNotifications()
+            notifications.forEach { queries.insertNotification(it) }
+        }
+    }
+
+    fun markNotificationAsRead(id: String) {
+        queries.markNotificationAsRead(id)
+    }
 
     // Session
     fun getSession(): SessionEntity? {

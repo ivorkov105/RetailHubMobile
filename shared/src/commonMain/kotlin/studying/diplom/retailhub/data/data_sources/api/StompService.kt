@@ -26,23 +26,25 @@ import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.StompRequestUpdateEntity
 import studying.diplom.retailhub.data.enteties.request.toRequestEntity
 
+const val URL = "ws://83.147.255.205:8180/ws"
+
 class StompService(
     private val client: HttpClient,
     private val localSource: LocalSource
-) {
+) : WSService {
     private var session: WebSocketSession? = null
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private val json = Json { ignoreUnknownKeys = true }
 
     private val _requestUpdates = MutableSharedFlow<RequestEntity>()
-    val requestUpdates: SharedFlow<RequestEntity> = _requestUpdates.asSharedFlow()
+    override val requestUpdates: SharedFlow<RequestEntity> = _requestUpdates.asSharedFlow()
 
-    fun connect() {
+    override fun connect() {
         scope.launch {
             val token = localSource.getSession()?.accessToken ?: return@launch
             try {
                 session = client.webSocketSession {
-                    url("ws://83.147.255.205:8180/ws")
+                    url(URL)
                 }
 
                 val connectFrame = """
@@ -71,7 +73,7 @@ class StompService(
         }
     }
 
-    fun subscribeToStore(storeId: String) {
+    override fun subscribeToStore(storeId: String) {
         val subscribeFrame = """
             SUBSCRIBE
             id:sub-store
@@ -85,7 +87,7 @@ class StompService(
         }
     }
 
-    fun subscribeToDepartment(departmentId: String) {
+    override fun subscribeToDepartment(departmentId: String) {
         val subscribeFrame = """
             SUBSCRIBE
             id:sub-dept
@@ -113,7 +115,7 @@ class StompService(
         }
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         scope.launch {
             session?.close()
             session = null

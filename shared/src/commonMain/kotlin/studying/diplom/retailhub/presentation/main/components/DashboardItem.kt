@@ -37,8 +37,8 @@ fun DashboardButton(
 			modifier = Modifier
 				.padding(8.dp)
 				.fillMaxSize(),
-			horizontalAlignment = Alignment.Start,
-			verticalArrangement = Arrangement.SpaceBetween
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.Center
 		) {
 			Text(
 				text = item.label,

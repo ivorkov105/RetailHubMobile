@@ -11,8 +11,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.api.ApiException
-import studying.diplom.retailhub.data.data_sources.api.StompService
-import studying.diplom.retailhub.data.mappers.toModel
+import studying.diplom.retailhub.domain.repositories.RequestRepository
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
@@ -26,7 +25,7 @@ class RequestsViewModel(
     private val completeRequestUseCase: CompleteRequestUseCase,
     private val getProfileUseCase: GetProfileUseCase,
     private val startShiftUseCase: StartShiftUseCase,
-    private val stompService: StompService
+    private val requestRepository: RequestRepository
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(RequestsState())
@@ -42,14 +41,13 @@ class RequestsViewModel(
             getProfileUseCase().onSuccess { user ->
                 _state.update { it.copy(currentUserFullName = "${user.firstName} ${user.lastName}") }
                 
-                // Подключаемся к WebSocket после получения профиля
-                stompService.connect()
+                requestRepository.connectToWebSocket()
                 
                 if (user.role == UserRoles.MANAGER.name) {
-                    stompService.subscribeToStore(user.storeId)
+                    requestRepository.subscribeToStore(user.storeId)
                 } else if (user.role == UserRoles.CONSULTANT.name) {
                     user.departments.forEach { dept ->
-                        stompService.subscribeToDepartment(dept.id)
+                        requestRepository.subscribeToDepartment(dept.id)
                     }
                 }
             }
@@ -57,9 +55,8 @@ class RequestsViewModel(
     }
 
     private fun observeWebSocketUpdates() {
-        stompService.requestUpdates
-            .onEach { entity ->
-                val updatedRequest = entity.toModel()
+        requestRepository.observeRequestUpdates()
+            .onEach { updatedRequest ->
                 _state.update { state ->
                     val newList = state.requests.toMutableList()
                     val index = newList.indexOfFirst { it.id == updatedRequest.id }
@@ -158,7 +155,7 @@ class RequestsViewModel(
             assignRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
-                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.BadRequest) {
+                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.PreconditionFailed) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
                 } else {
                     _state.update { it.copy(
@@ -191,7 +188,7 @@ class RequestsViewModel(
             completeRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
-                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.BadRequest) {
+                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.PreconditionFailed) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
                 } else {
                     _state.update { it.copy(
@@ -214,7 +211,7 @@ class RequestsViewModel(
     }
 
     override fun onDispose() {
-        stompService.disconnect()
+        requestRepository.disconnectFromWebSocket()
         super.onDispose()
     }
 }

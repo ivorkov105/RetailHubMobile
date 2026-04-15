@@ -19,9 +19,15 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.RefreshTokenRequest
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
+import studying.diplom.retailhub.data.enteties.notifications.NotificationEntity
+import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
 import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
 import studying.diplom.retailhub.data.enteties.request.RequestListEntity
@@ -77,7 +83,7 @@ class ApiClientImpl(
 	}
 
 	override suspend fun getMe(): Result<UserEntity> = runCatching {
-		httpClient.get("auth/me").handleResponse().body()
+		httpClient.get("users/me").handleResponse().body()
 	}
 
 	override suspend fun getRequests(
@@ -113,8 +119,8 @@ class ApiClientImpl(
 		httpClient.post("requests/$requestId/complete").handleResponse().body()
 	}
 
-	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> {
-		TODO("Not yet implemented")
+	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> = runCatching {
+		httpClient.get("shifts/active").handleResponse().body()
 	}
 
 	override suspend fun startShift(): Result<ShiftEntity> = runCatching {
@@ -124,8 +130,11 @@ class ApiClientImpl(
 	override suspend fun getMyShifts(
 		dateFrom: String,
 		dateTo: String
-	): Result<List<ShiftEntity>> {
-		TODO("Not yet implemented")
+	): Result<List<ShiftEntity>> = runCatching {
+		httpClient.get("shifts/my") {
+			if (dateFrom.isNotBlank()) parameter("dateFrom", dateFrom)
+			if (dateTo.isNotBlank()) parameter("dateTo", dateTo)
+		}.handleResponse().body()
 	}
 
 	override suspend fun endShift(): Result<ShiftEntity> = runCatching {
@@ -220,22 +229,72 @@ class ApiClientImpl(
 		httpClient.delete("users/${deletingUser.id}").handleResponse()
 	}
 
-	override suspend fun getQrCodes(departmentId: String): Result<List<QREntity>> {
-		TODO("Not yet implemented")
+	override suspend fun getQrCodes(departmentId: String): Result<List<QREntity>> = runCatching {
+		httpClient.get("qr-codes") {
+			parameter("departmentId", departmentId)
+		}.handleResponse().body()
 	}
 
 	override suspend fun postQrCode(
 		departmentId: String,
 		label: String
-	): Result<QREntity> {
-		TODO("Not yet implemented")
+	): Result<QREntity> = runCatching {
+		httpClient.post("qr-codes") {
+			parameter("departmentId", departmentId)
+			parameter("label", label)
+		}.handleResponse().body()
 	}
 
-	override suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray> {
-		TODO("Not yet implemented")
+	override suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray> = runCatching {
+		httpClient.get("qr-codes/$qrCodeId/download").handleResponse().body()
 	}
 
-	override suspend fun deleteQrCode(qrCodeId: String): Result<Unit> {
-		TODO("Not yet implemented")
+	override suspend fun deleteQrCode(qrCodeId: String): Result<Unit> = runCatching {
+		httpClient.delete("qr-codes/$qrCodeId").handleResponse()
 	}
+
+    override suspend fun getNotifications(): Result<NotificationListEntity> = runCatching {
+        httpClient.get("notifications").handleResponse().body()
+    }
+
+    override suspend fun markNotificationAsRead(notificationId: String): Result<Unit> = runCatching {
+        httpClient.post("notifications/$notificationId/read").handleResponse()
+    }
+
+    override suspend fun registerDevice(device: DeviceEntity): Result<Unit> = runCatching {
+        httpClient.post("devices") {
+            contentType(ContentType.Application.Json)
+            setBody(device)
+        }.handleResponse()
+    }
+
+    override suspend fun deleteDevice(deviceId: String): Result<Unit> = runCatching {
+        httpClient.delete("devices/$deviceId").handleResponse()
+    }
+
+    override suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity> = runCatching {
+        httpClient.get("analytics/dashboard").handleResponse().body()
+    }
+
+    override suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>> = runCatching {
+        httpClient.get("analytics/consultants").handleResponse().body()
+    }
+
+    override suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity> = runCatching {
+        httpClient.get("analytics/consultants/$userId").handleResponse().body()
+    }
+
+    override suspend fun getRequestsHistory(
+        dateFrom: String,
+        dateTo: String,
+        page: Int,
+        size: Int
+    ): Result<RequestListEntity> = runCatching {
+        httpClient.get("analytics/requests") {
+            parameter("dateFrom", dateFrom)
+            parameter("dateTo", dateTo)
+            parameter("page", page)
+            parameter("size", size)
+        }.handleResponse().body()
+    }
 }
