@@ -36,6 +36,10 @@ val useCaseModule = module {
 	factory { GetDepartmentUseCase(get()) }
 	factory { UpdateDepartmentUseCase(get()) }
 	factory { DeleteDepartmentUseCase(get()) }
+    factory { PostQrCodeUseCase(get()) }
+    factory { GetQrCodesUseCase(get()) }
+    factory { DeleteQrCodeUseCase(get()) }
+    factory { DownloadQrCodeUseCase(get()) }
 
 	factory { LoginUseCase(get()) }
 	factory { GetProfileUseCase(get()) }

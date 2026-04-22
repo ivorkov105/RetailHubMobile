@@ -26,6 +26,8 @@ sealed class ProfileNavigationEvent {
     object NavigateToCreateStore : ProfileNavigationEvent()
 	object NavigateToCreateDepartment : ProfileNavigationEvent()
 	object NavigateToCreateEmployee : ProfileNavigationEvent()
+    object NavigateToCreateQr : ProfileNavigationEvent()
+    object NavigateToQrList : ProfileNavigationEvent()
 	data class NavigateToUpdateStore(val store: StoreModel) : ProfileNavigationEvent()
 }
 
@@ -79,7 +81,16 @@ class ProfileViewModel(
 					_navigationEvents.emit(NavigateToCreateEmployee)
 				}
 			}
-	        ProfileEvent.OnQrClick               -> TODO()
+	        ProfileEvent.OnQrClick               -> {
+                screenModelScope.launch {
+                    _navigationEvents.emit(NavigateToCreateQr)
+                }
+            }
+            ProfileEvent.OnQrListClick           -> {
+                screenModelScope.launch {
+                    _navigationEvents.emit(NavigateToQrList)
+                }
+            }
             ProfileEvent.OnStartShiftClick       -> startShift()
             ProfileEvent.OnEndShiftClick         -> endShift()
         }

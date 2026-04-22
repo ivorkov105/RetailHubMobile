@@ -32,7 +32,7 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun logout() {
-        localSource.clearSession()
+        localSource.clearAll()
     }
 
     override suspend fun getProfile(): Result<UserModel> {

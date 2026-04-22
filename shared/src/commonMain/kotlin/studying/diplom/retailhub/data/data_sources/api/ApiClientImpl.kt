@@ -240,13 +240,16 @@ class ApiClientImpl(
 		label: String
 	): Result<QREntity> = runCatching {
 		httpClient.post("qr-codes") {
-			parameter("departmentId", departmentId)
-			parameter("label", label)
+            contentType(ContentType.Application.Json)
+            setBody(buildJsonObject {
+                put("department_id", departmentId)
+                put("label", label)
+            })
 		}.handleResponse().body()
 	}
 
 	override suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray> = runCatching {
-		httpClient.get("qr-codes/$qrCodeId/download").handleResponse().body()
+		httpClient.get("qr-codes/$qrCodeId").handleResponse().body()
 	}
 
 	override suspend fun deleteQrCode(qrCodeId: String): Result<Unit> = runCatching {

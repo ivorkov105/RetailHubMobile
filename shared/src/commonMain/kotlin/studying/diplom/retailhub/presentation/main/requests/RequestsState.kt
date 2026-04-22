@@ -16,6 +16,7 @@ data class RequestsState(
     val isLastPage: Boolean = false,
     val requestToAccept: RequestModel? = null,
     val requestToComplete: RequestModel? = null,
+    val currentUserId: String = "",
     val currentUserFullName: String = "",
     val showStartShiftDialog: Boolean = false
 )

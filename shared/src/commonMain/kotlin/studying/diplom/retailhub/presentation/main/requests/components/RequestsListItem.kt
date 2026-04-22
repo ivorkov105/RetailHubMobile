@@ -1,5 +1,6 @@
 package studying.diplom.retailhub.presentation.main.requests.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,31 +25,24 @@ import studying.diplom.retailhub.domain.models.request.RequestStatus
 @Composable
 fun RequestsListItem(
     request: RequestModel,
-    currentUserFullName: String,
+    currentUserId: String,
     onButtonClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
-    val assignedFullName = listOfNotNull(request.assignedUserFirstName, request.assignedUserLastName)
-        .filter { it.isNotBlank() }
-        .joinToString(" ")
-        .trim()
-
-    val isAssigned = assignedFullName.isNotEmpty()
-    val isAssignedToMe = isAssigned && assignedFullName.equals(currentUserFullName.trim(), ignoreCase = true)
+    val isAssignedToMe = request.assignedUserId != null && request.assignedUserId == currentUserId
 
     val isEnabled = when (request.status) {
         RequestStatus.CREATED, RequestStatus.WAITING -> true
         RequestStatus.ASSIGNED -> isAssignedToMe
-        RequestStatus.ESCALATED -> !isAssigned || isAssignedToMe
+        RequestStatus.ESCALATED -> request.assignedUserId == null || isAssignedToMe
         else -> false
     }
 
     val buttonColor = when (request.status) {
-        RequestStatus.COMPLETED -> Color(0xFF4CAF50) // Green
+        RequestStatus.COMPLETED -> Color(0xFF4CAF50)
         RequestStatus.CANCELED -> Color.Gray
         RequestStatus.ASSIGNED -> if (isAssignedToMe) Color(0xFF3DA9FC) else Color.Gray
-        RequestStatus.ESCALATED -> if (isAssigned && !isAssignedToMe) Color.Gray else Color(0xFFF44336) // Red
+        RequestStatus.ESCALATED -> if (request.assignedUserId != null && !isAssignedToMe) Color.Gray else Color(0xFFF44336)
         else -> MaterialTheme.colorScheme.primary
     }
 
@@ -59,7 +53,7 @@ fun RequestsListItem(
         RequestStatus.ASSIGNED -> if (isAssignedToMe) "Завершить" else "Принято"
         RequestStatus.ESCALATED -> when {
             isAssignedToMe -> "Завершить"
-            isAssigned -> "Занято"
+            request.assignedUserId != null -> "Занято"
             else -> "СРОЧНО"
         }
         else -> "Принять"
@@ -70,7 +64,8 @@ fun RequestsListItem(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        border = if (isAssignedToMe) BorderStroke(2.dp, Color(0xFF3DA9FC)) else null
     ) {
         Column(
             modifier = Modifier

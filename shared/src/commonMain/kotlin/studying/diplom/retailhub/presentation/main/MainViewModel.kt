@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
@@ -16,7 +17,8 @@ import studying.diplom.retailhub.presentation.main.utils.UserRoles
 class MainViewModel(
     private val userRole: String? = null,
     private val startShiftUseCase: StartShiftUseCase,
-    private val endShiftUseCase: EndShiftUseCase
+    private val endShiftUseCase: EndShiftUseCase,
+    private val localSource: LocalSource
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(
@@ -52,10 +54,9 @@ class MainViewModel(
     }
 
     override fun onDispose() {
-        if (userRole == UserRoles.CONSULTANT.name) {
-            // В KMP onDispose вызывается при уничтожении ScreenModel (закрытие экрана/приложения)
-            // Но для гарантированного завершения лучше вызывать ивент явно
-        }
+        // При закрытии приложения или уничтожении основного экрана очищаем кэш данных
+        localSource.clearAllExceptSession()
+
         super.onDispose()
     }
 }

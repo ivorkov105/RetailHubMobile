@@ -1,0 +1,59 @@
+CREATE TABLE IF NOT EXISTS RequestEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    departmentId TEXT NOT NULL,
+    departmentName TEXT NOT NULL,
+    isEscalated INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    assignedUserFirstName TEXT,
+    assignedUserLastName TEXT,
+    status TEXT NOT NULL,
+    clientSessionToken TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    assignedAt TEXT,
+    completedAt TEXT
+);
+
+CREATE TABLE IF NOT EXISTS StoreEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    timezone TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS DepartmentEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS UserEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    phoneNumber TEXT NOT NULL,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    role TEXT NOT NULL,
+    currentStatus TEXT NOT NULL,
+    departmentIds TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS QrCodeEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    departmentId TEXT NOT NULL,
+    label TEXT NOT NULL,
+    url TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS NotificationEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    isRead INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+);

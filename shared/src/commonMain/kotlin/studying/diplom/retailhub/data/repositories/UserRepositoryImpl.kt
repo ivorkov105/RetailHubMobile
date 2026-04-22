@@ -1,7 +1,9 @@
 package studying.diplom.retailhub.data.repositories
 
+import io.ktor.http.HttpStatusCode
 import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.RemoteSource
+import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.data.mappers.toApiEntity
 import studying.diplom.retailhub.data.mappers.toDbEntity
 import studying.diplom.retailhub.data.mappers.toModel
@@ -18,38 +20,36 @@ class UserRepositoryImpl(
         
         return remoteResult.fold(
             onSuccess = { apiEntities ->
-                runCatching { localSource.saveUsers(apiEntities.map { it.toDbEntity() }) }
+                localSource.saveUsers(apiEntities.map { it.toDbEntity() })
                 Result.success(apiEntities.map { it.toModel() })
             },
             onFailure = { error ->
-                val localResult = runCatching { 
-                    val depts = localSource.getDepartments().map { it.toModel() }
-                    localSource.getStoreUsers().map { dbUser ->
-                        val ids = if (dbUser.departmentIds.isEmpty()) emptyList() else dbUser.departmentIds.split(",")
-                        val userDepts = depts.filter { it.id in ids }
-                        UserModel(
-                            id = dbUser.id,
-                            storeId = dbUser.storeId,
-                            phoneNumber = dbUser.phoneNumber,
-                            firstName = dbUser.firstName,
-                            lastName = dbUser.lastName,
-                            role = dbUser.role,
-                            currentStatus = dbUser.currentStatus,
-                            departments = userDepts,
-                            createdAt = dbUser.createdAt
-                        )
-                    }
-                }
-                localResult.fold(
-                    onSuccess = { localData ->
-                        if (localData.isNotEmpty()) {
-                            Result.success(localData)
-                        } else {
-                            Result.failure(error)
+                if (error is ApiException && error.statusCode == HttpStatusCode.NotFound) {
+                    localSource.clearUsers()
+                    Result.success(emptyList())
+                } else {
+                    val localData = runCatching { 
+                        val depts = localSource.getDepartments().map { it.toModel() }
+                        localSource.getStoreUsers().map { dbUser ->
+                            val ids = if (dbUser.departmentIds.isEmpty()) emptyList() else dbUser.departmentIds.split(",")
+                            val userDepts = depts.filter { it.id in ids }
+                            UserModel(
+                                id = dbUser.id,
+                                storeId = dbUser.storeId,
+                                phoneNumber = dbUser.phoneNumber,
+                                firstName = dbUser.firstName,
+                                lastName = dbUser.lastName,
+                                role = dbUser.role,
+                                currentStatus = dbUser.currentStatus,
+                                departments = userDepts,
+                                createdAt = dbUser.createdAt
+                            )
                         }
-                    },
-                    onFailure = { Result.failure(error) }
-                )
+                    }.getOrDefault(emptyList())
+
+                    if (localData.isNotEmpty()) Result.success(localData)
+                    else Result.failure(error)
+                }
             }
         )
     }
@@ -57,30 +57,35 @@ class UserRepositoryImpl(
     override suspend fun getUser(id: String): Result<UserModel> {
         return remoteSource.getUser(id).fold(
             onSuccess = { apiEntity ->
-                runCatching { localSource.saveUser(apiEntity.toDbEntity()) }
+                localSource.saveUser(apiEntity.toDbEntity())
                 Result.success(apiEntity.toModel())
             },
             onFailure = { error ->
-                val dbUser = runCatching { localSource.getUser(id) }.getOrNull()
-                if (dbUser != null) {
-                    val depts = localSource.getDepartments().map { it.toModel() }
-                    val ids = if (dbUser.departmentIds.isEmpty()) emptyList() else dbUser.departmentIds.split(",")
-                    val userDepts = depts.filter { it.id in ids }
-                    Result.success(
-                        UserModel(
-                            id = dbUser.id,
-                            storeId = dbUser.storeId,
-                            phoneNumber = dbUser.phoneNumber,
-                            firstName = dbUser.firstName,
-                            lastName = dbUser.lastName,
-                            role = dbUser.role,
-                            currentStatus = dbUser.currentStatus,
-                            departments = userDepts,
-                            createdAt = dbUser.createdAt
-                        )
-                    )
-                } else {
+                if (error is ApiException && error.statusCode == HttpStatusCode.NotFound) {
+                    localSource.deleteUser(id)
                     Result.failure(error)
+                } else {
+                    val dbUser = runCatching { localSource.getUser(id) }.getOrNull()
+                    if (dbUser != null) {
+                        val depts = localSource.getDepartments().map { it.toModel() }
+                        val ids = if (dbUser.departmentIds.isEmpty()) emptyList() else dbUser.departmentIds.split(",")
+                        val userDepts = depts.filter { it.id in ids }
+                        Result.success(
+                            UserModel(
+                                id = dbUser.id,
+                                storeId = dbUser.storeId,
+                                phoneNumber = dbUser.phoneNumber,
+                                firstName = dbUser.firstName,
+                                lastName = dbUser.lastName,
+                                role = dbUser.role,
+                                currentStatus = dbUser.currentStatus,
+                                departments = userDepts,
+                                createdAt = dbUser.createdAt
+                            )
+                        )
+                    } else {
+                        Result.failure(error)
+                    }
                 }
             }
         )
@@ -92,13 +97,14 @@ class UserRepositoryImpl(
 
     override suspend fun updateUser(user: UserModel): Result<UserModel> {
         return remoteSource.updateUser(user.toApiEntity()).map { apiEntity ->
-            runCatching { localSource.saveUser(apiEntity.toDbEntity()) }
+            localSource.saveUser(apiEntity.toDbEntity())
             apiEntity.toModel()
         }
     }
 
     override suspend fun deleteUser(user: UserModel): Result<Unit> {
-        runCatching { localSource.deleteUser(user.id) }
-        return remoteSource.deleteUser(user.toApiEntity())
+        return remoteSource.deleteUser(user.toApiEntity()).onSuccess {
+            localSource.deleteUser(user.id)
+        }
     }
 }

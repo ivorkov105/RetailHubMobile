@@ -8,7 +8,7 @@ import studying.diplom.retailhub.data.di.networkModule
 import studying.diplom.retailhub.domain.di.useCaseModule
 import studying.diplom.retailhub.presentation.di.viewModelModule
 
-fun initKoin(appDeclaration: KoinAppDeclaration = {}) =
+fun initKoin(appDeclaration: KoinAppDeclaration = {} ) =
     startKoin {
         appDeclaration()
         modules(

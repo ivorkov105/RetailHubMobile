@@ -76,14 +76,10 @@ object RequestsTab : Tab {
                     items(state.requests, key = { it.id }) { request ->
                         RequestsListItem(
                             request = request,
-                            currentUserFullName = state.currentUserFullName,
+                            currentUserId = state.currentUserId,
                             onButtonClick = { 
-                                val assignedFullName = listOfNotNull(request.assignedUserFirstName, request.assignedUserLastName)
-                                    .filter { it.isNotBlank() }
-                                    .joinToString(" ")
-                                    .trim()
-                                val isAssignedToMe = assignedFullName.isNotEmpty() && 
-                                    assignedFullName.equals(state.currentUserFullName.trim(), ignoreCase = true)
+                                val isAssignedToMe = request.assignedUserId != null &&
+                                    request.assignedUserId == state.currentUserId
 
                                 if (request.status == RequestStatus.ASSIGNED || (request.status == RequestStatus.ESCALATED && isAssignedToMe)) {
                                     screenModel.onEvent(RequestsEvent.OnShowCompleteDialog(request))

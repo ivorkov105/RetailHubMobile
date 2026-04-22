@@ -43,10 +43,12 @@ CREATE TABLE UserEntity (
 
 CREATE TABLE QrCodeEntity (
     id TEXT NOT NULL PRIMARY KEY,
-    storeId TEXT NOT NULL,
     departmentId TEXT NOT NULL,
+    departmentName TEXT NOT NULL,
+    token TEXT NOT NULL,
+    scanUrl TEXT NOT NULL,
     label TEXT NOT NULL,
-    url TEXT NOT NULL,
+    isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 1,
     createdAt TEXT NOT NULL
 );
 
@@ -142,7 +144,7 @@ getQrCodesByDepartment:
 SELECT * FROM QrCodeEntity WHERE departmentId = ?;
 
 insertQrCode:
-INSERT OR REPLACE INTO QrCodeEntity(id, storeId, departmentId, label, url, createdAt)
+INSERT OR REPLACE INTO QrCodeEntity(id, departmentId, departmentName, token, scanUrl, label, isActive, createdAt)
 VALUES ?;
 
 removeQrCode:

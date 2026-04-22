@@ -76,9 +76,15 @@ object EmployeesTab : Tab {
                         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 0.dp)
                     ) {
                         items(state.employees) { employee ->
+                            val statusColor = when (employee.currentStatus) {
+                                "ACTIVE" -> Color(0xFF4CAF50)
+                                "BUSY" -> Color(0xFFF44336)
+                                else -> Color.Gray
+                            }
                             BaseListItem(
                                 title = "${employee.firstName} ${employee.lastName}",
                                 statusText = employee.currentStatus,
+                                statusColor = statusColor,
                                 onClick = { screenModel.onEvent(EmployeesListEvent.OnEmployeeClick(employee)) }
                             )
                         }

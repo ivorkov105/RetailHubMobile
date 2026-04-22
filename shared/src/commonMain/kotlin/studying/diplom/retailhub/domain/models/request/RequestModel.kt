@@ -6,6 +6,7 @@ data class RequestModel(
 	val departmentId: String,
 	val departmentName: String,
 	val isEscalated: Boolean,
+    val assignedUserId: String?,
 	val assignedUserFirstName: String?,
 	val assignedUserLastName: String?,
 	val status: RequestStatus,

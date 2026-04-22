@@ -44,6 +44,8 @@ class LocalSource(database: RetailHubDatabase) {
         }
     }
 
+    fun clearRequests() = queries.removeAllRequests()
+
     // Stores
     fun getStore(): StoreEntity? {
         return queries.getStore().executeAsOneOrNull()
@@ -55,6 +57,8 @@ class LocalSource(database: RetailHubDatabase) {
             queries.insertStore(store)
         }
     }
+
+    fun clearStore() = queries.removeStore()
 
     // Departments
     fun getDepartments(): List<DepartmentEntity> {
@@ -82,6 +86,8 @@ class LocalSource(database: RetailHubDatabase) {
         queries.removeDepartment(id)
     }
 
+    fun clearDepartments() = queries.removeAllDepartments()
+
 	// Users
 	fun getStoreUsers(): List<UserEntity> = queries.getStoreUsers().executeAsList()
 
@@ -98,6 +104,8 @@ class LocalSource(database: RetailHubDatabase) {
 
 	fun deleteUser(id: String) = queries.removeUser(id)
 
+    fun clearUsers() = queries.removeAllUsers()
+
     // Notifications
     fun getNotifications(): List<NotificationEntity> {
         return queries.getNotifications().executeAsList()
@@ -112,6 +120,31 @@ class LocalSource(database: RetailHubDatabase) {
 
     fun markNotificationAsRead(id: String) {
         queries.markNotificationAsRead(id)
+    }
+
+    fun clearNotifications() = queries.removeAllNotifications()
+
+    fun clearAll() {
+        queries.transaction {
+            queries.removeAllRequests()
+            queries.removeStore()
+            queries.removeAllDepartments()
+            queries.removeAllUsers()
+            queries.removeAllQrCodes()
+            queries.removeAllNotifications()
+            queries.removeSession()
+        }
+    }
+
+    fun clearAllExceptSession() {
+        queries.transaction {
+            queries.removeAllRequests()
+            queries.removeStore()
+            queries.removeAllDepartments()
+            queries.removeAllUsers()
+            queries.removeAllQrCodes()
+            queries.removeAllNotifications()
+        }
     }
 
     // Session

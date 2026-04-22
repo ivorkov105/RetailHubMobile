@@ -39,7 +39,10 @@ class RequestsViewModel(
     private fun loadProfile() {
         screenModelScope.launch {
             getProfileUseCase().onSuccess { user ->
-                _state.update { it.copy(currentUserFullName = "${user.firstName} ${user.lastName}") }
+                _state.update { it.copy(
+                    currentUserId = user.id,
+                    currentUserFullName = "${user.firstName} ${user.lastName}" 
+                ) }
                 
                 requestRepository.connectToWebSocket()
                 
@@ -155,7 +158,7 @@ class RequestsViewModel(
             assignRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
-                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.PreconditionFailed) {
+                if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
                 } else {
                     _state.update { it.copy(
@@ -188,7 +191,7 @@ class RequestsViewModel(
             completeRequestUseCase(requestId).onSuccess {
                 loadRequests(isRefresh = true)
             }.onFailure { throwable ->
-                if (throwable is ApiException && throwable.statusCode == HttpStatusCode.PreconditionFailed) {
+                if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
                 } else {
                     _state.update { it.copy(

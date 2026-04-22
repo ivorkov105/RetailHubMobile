@@ -38,6 +38,8 @@ import studying.diplom.retailhub.presentation.main.components.DashboardItem
 import studying.diplom.retailhub.presentation.main.store.create_store.CreateStoreScreen
 import studying.diplom.retailhub.presentation.main.departments.department.DepartmentScreen
 import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeScreen
+import studying.diplom.retailhub.presentation.main.qr.create_qr.CreateQrScreen
+import studying.diplom.retailhub.presentation.main.qr.qr_list.QrListScreen
 import studying.diplom.retailhub.presentation.main.store.my_store.MyStoreScreen
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
@@ -89,6 +91,12 @@ object ProfileTab : Tab {
 	                is ProfileNavigationEvent.NavigateToCreateEmployee -> {
 	                    navigator.parent?.push(EmployeeScreen(mode = ScreenMode.CREATE))
 					}
+                    is ProfileNavigationEvent.NavigateToCreateQr -> {
+                        navigator.parent?.push(CreateQrScreen())
+                    }
+                    ProfileNavigationEvent.NavigateToQrList -> {
+                        navigator.parent?.push(QrListScreen())
+                    }
                 }
             }
         }
@@ -109,12 +117,37 @@ object ProfileTab : Tab {
                     item(span = { GridItemSpan(2) }) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Spacer(modifier = Modifier.height(24.dp))
-                            Box(
-                                modifier = Modifier
-                                    .size(150.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray)
-                            )
+                            
+                            Box(contentAlignment = Alignment.BottomEnd) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(150.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray)
+                                )
+                                
+                                val statusColor = when (state.user?.currentStatus) {
+                                    "ACTIVE" -> Color(0xFF4CAF50)
+                                    "BUSY" -> Color(0xFFF44336)
+                                    else -> Color.Gray
+                                }
+                                
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .padding(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                            .background(statusColor)
+                                    )
+                                }
+                            }
+                            
                             Spacer(modifier = Modifier.height(24.dp))
                             Surface(
                                 modifier = Modifier
@@ -156,7 +189,9 @@ object ProfileTab : Tab {
                             DashboardItem("Создать магазин", ProfileEvent.OnCreateStoreClick),
                             DashboardItem("Обновить магазин", ProfileEvent.OnUpdateStoreClick),
                             DashboardItem("Создать отдел", ProfileEvent.OnCreateDepartmentClick),
-                            DashboardItem("Создать консультанта", ProfileEvent.OnCreateEmployeeClick),
+                            DashboardItem("Создать сотрудника", ProfileEvent.OnCreateEmployeeClick),
+                            DashboardItem("Создать QR", ProfileEvent.OnQrClick),
+                            DashboardItem("QR-коды", ProfileEvent.OnQrListClick),
                         )
 
                         items(dashboardItems) { item ->

@@ -11,11 +11,13 @@ import studying.diplom.retailhub.presentation.main.departments.department.Depart
 import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeViewModel
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesListViewModel
 import studying.diplom.retailhub.presentation.main.store.my_store.MyStoreViewModel
+import studying.diplom.retailhub.presentation.main.qr.create_qr.CreateQrViewModel
+import studying.diplom.retailhub.presentation.main.qr.qr_list.QrListViewModel
 
 val viewModelModule = module {
 	factory { RequestsViewModel(get(), get(), get(), get(), get(), get()) }
 	factory { AuthViewModel(get(), get()) }
-	factory { params -> MainViewModel(params.getOrNull(), get(), get()) }
+	factory { params -> MainViewModel(params.getOrNull(), get(), get(), get()) }
 	factory { ProfileViewModel(get(), get(), get(), get(), get()) }
 	factory { params -> CreateStoreViewModel(get(), get(), params.getOrNull()) }
 	factory { MyStoreViewModel(get()) }
@@ -23,4 +25,6 @@ val viewModelModule = module {
 	factory { DepartmentsListViewModel(get()) }
 	factory { params -> EmployeeViewModel(get(), get(), get(), get(), get(), params.getOrNull()) }
 	factory { EmployeesListViewModel(get()) }
+    factory { CreateQrViewModel(get(), get()) }
+    factory { QrListViewModel(get(), get(), get(), get()) }
 }

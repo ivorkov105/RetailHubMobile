@@ -6,7 +6,6 @@ import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
 import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
 import studying.diplom.retailhub.data.enteties.auth.TokenEntity
 import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
-import studying.diplom.retailhub.data.enteties.notifications.NotificationEntity
 import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
 import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
 import studying.diplom.retailhub.data.enteties.request.RequestEntity
