@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import studying.diplom.retailhub.domain.models.qr_code.QrCodeModel
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.DeleteQrCodeUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.DownloadQrCodeUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetQrCodesUseCase
@@ -23,6 +24,8 @@ class QrListViewModel(
     private val _state = MutableStateFlow(QrListState())
     val state: StateFlow<QrListState> = _state.asStateFlow()
 
+    private var allQrCodes: List<QrCodeModel> = emptyList()
+
     init {
         loadQrCodes()
     }
@@ -31,11 +34,26 @@ class QrListViewModel(
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             getQrCodesUseCase().onSuccess { list ->
-                _state.update { it.copy(qrCodes = list, isLoading = false) }
+                allQrCodes = list
+                updateFilteredList()
             }.onFailure { error ->
                 _state.update { it.copy(isLoading = false, error = error.message) }
             }
         }
+    }
+
+    fun toggleFilter() {
+        _state.update { it.copy(isFilterActive = !it.isFilterActive) }
+        updateFilteredList()
+    }
+
+    private fun updateFilteredList() {
+        val filtered = if (_state.value.isFilterActive) {
+            allQrCodes.filter { it.isActive }
+        } else {
+            allQrCodes
+        }
+        _state.update { it.copy(qrCodes = filtered, isLoading = false) }
     }
 
     fun toggleExpand(id: String) {
@@ -56,7 +74,7 @@ class QrListViewModel(
     }
 
     fun downloadQrCode(id: String) {
-        val qrCode = _state.value.qrCodes.find { it.id == id } ?: return
+        val qrCode = allQrCodes.find { it.id == id } ?: return
         screenModelScope.launch {
             downloadQrCodeUseCase(id).onSuccess { bytes ->
                 try {

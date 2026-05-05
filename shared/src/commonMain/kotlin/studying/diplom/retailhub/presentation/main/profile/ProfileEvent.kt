@@ -12,4 +12,5 @@ sealed class ProfileEvent {
     object OnQrListClick : ProfileEvent()
     object OnStartShiftClick : ProfileEvent()
     object OnEndShiftClick : ProfileEvent()
+    object OnNotificationsClick : ProfileEvent()
 }

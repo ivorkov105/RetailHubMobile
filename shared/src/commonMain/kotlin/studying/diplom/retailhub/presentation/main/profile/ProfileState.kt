@@ -8,6 +8,7 @@ data class ProfileState(
     val user: UserModel? = null,
     val store: StoreModel? = null,
     val allDepartments: List<DepartmentModel> = emptyList(),
+    val hasUnreadNotifications: Boolean = false,
     val isLoading: Boolean = false,
     val error: String? = null
 )

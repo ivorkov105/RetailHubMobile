@@ -61,6 +61,7 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             
             implementation(libs.multiplatform.settings)
+            implementation(libs.sqldelight.coroutines)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

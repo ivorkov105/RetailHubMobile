@@ -7,7 +7,8 @@ data class QrListState(
     val expandedQrCodeId: String? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val downloadStatus: DownloadStatus? = null
+    val downloadStatus: DownloadStatus? = null,
+    val isFilterActive: Boolean = true
 )
 
 sealed class DownloadStatus {

@@ -44,7 +44,7 @@ object RequestsTab : Tab {
         Box(modifier = Modifier.fillMaxSize()) {
             if (state.isLoading && state.requests.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (state.requests.isEmpty()) {
+            } else if (state.requests.isEmpty() && !state.isLoading) {
                 Text(
                     text = "Ожидание новых заявок...",
                     modifier = Modifier.align(Alignment.Center)
@@ -76,9 +76,12 @@ object RequestsTab : Tab {
 
                     item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
                 }
+                
+                if (state.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
             }
 
-            // Диалоговое окно подтверждения принятия
             state.requestToAccept?.let { request ->
                 AlertDialog(
                     onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) },
@@ -103,7 +106,6 @@ object RequestsTab : Tab {
                 )
             }
 
-            // Диалоговое окно подтверждения завершения
             state.requestToComplete?.let { request ->
                 AlertDialog(
                     onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissCompleteDialog) },
@@ -160,10 +162,19 @@ object RequestsTab : Tab {
                     confirmButton = {
                         TextButton(
                             onClick = { 
+                                screenModel.onEvent(RequestsEvent.OnRetryLoad) 
+                            }
+                        ) {
+                            Text("Повторить")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { 
                                 screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) 
                             }
                         ) {
-                            Text("OK")
+                            Text("Закрыть")
                         }
                     }
                 )

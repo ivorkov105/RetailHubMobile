@@ -27,3 +27,11 @@ fun DbNotificationEntity.toModel() = NotificationModel(
     isRead = isRead,
     createdAt = createdAt
 )
+
+fun NotificationModel.toDbEntity() = DbNotificationEntity(
+    id = id,
+    title = title,
+    body = body,
+    isRead = isRead,
+    createdAt = createdAt
+)

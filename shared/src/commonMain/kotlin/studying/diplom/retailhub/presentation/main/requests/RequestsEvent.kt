@@ -12,4 +12,5 @@ sealed interface RequestsEvent {
     data object OnDismissErrorDialog : RequestsEvent
     data object OnConfirmStartShift : RequestsEvent
     data object OnDismissStartShiftDialog : RequestsEvent
+    data object OnRetryLoad : RequestsEvent
 }

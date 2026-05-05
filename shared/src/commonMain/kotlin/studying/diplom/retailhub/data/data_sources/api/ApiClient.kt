@@ -22,11 +22,20 @@ interface ApiClient {
     suspend fun login(request: LoginRequestEntity): Result<TokenEntity>
     suspend fun refreshToken(refreshToken: String): Result<TokenEntity>
     suspend fun getMe(): Result<UserEntity>
+    fun clearAuthTokens()
 
 	//Заявки
     suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit>
     suspend fun assignRequest(requestId: String): Result<RequestEntity>
     suspend fun completeRequest(requestId: String): Result<RequestEntity>
+    suspend fun getRequests(
+        status: String? = null,
+        departmentId: String? = null,
+        dateFrom: String? = null,
+        dateTo: String? = null,
+        page: Int = 0,
+        size: Int = 20
+    ): Result<RequestListEntity>
 
 	//Смены
 	suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>>

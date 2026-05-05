@@ -5,9 +5,7 @@ import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetAnalyti
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantDetailStatsUseCase
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantsStatsUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.*
-import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.GetNotificationsUseCase
-import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.MarkNotificationReadUseCase
-import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.RefreshNotificationsUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AddRequestsUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
@@ -37,7 +35,7 @@ val useCaseModule = module {
 
 	factory { LoginUseCase(get()) }
 	factory { GetProfileUseCase(get()) }
-	factory { LogoutUseCase(get()) }
+	factory { LogoutUseCase(get(), get()) }
 	factory { IsAuthorizedUseCase(get()) }
 	factory { GetSavedRoleUseCase(get()) }
 
@@ -54,6 +52,9 @@ val useCaseModule = module {
     factory { GetNotificationsUseCase(get()) }
     factory { RefreshNotificationsUseCase(get()) }
     factory { MarkNotificationReadUseCase(get()) }
+    factory { RegisterDeviceUseCase(get()) }
+    factory { UnregisterDeviceUseCase(get()) }
+    factory { SaveNotificationUseCase(get()) }
 
     factory { GetAnalyticsDashboardUseCase(get()) }
     factory { GetConsultantsStatsUseCase(get()) }

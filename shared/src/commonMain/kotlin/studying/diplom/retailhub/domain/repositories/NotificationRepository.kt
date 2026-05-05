@@ -7,4 +7,5 @@ interface NotificationRepository {
     fun getNotifications(): Flow<List<NotificationModel>>
     suspend fun refreshNotifications(): Result<Unit>
     suspend fun markAsRead(notificationId: String): Result<Unit>
+    suspend fun saveNotification(notification: NotificationModel)
 }

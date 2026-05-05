@@ -33,7 +33,11 @@ class RemoteSource(
         return apiClient.getMe()
     }
 
-    override suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit> {
+	override fun clearAuthTokens() {
+		return apiClient.clearAuthTokens()
+	}
+
+	override suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit> {
         return apiClient.addRequests(newRequests)
     }
 
@@ -43,6 +47,17 @@ class RemoteSource(
 
     override suspend fun completeRequest(requestId: String): Result<RequestEntity> {
         return apiClient.completeRequest(requestId)
+    }
+
+    override suspend fun getRequests(
+        status: String?,
+        departmentId: String?,
+        dateFrom: String?,
+        dateTo: String?,
+        page: Int,
+        size: Int
+    ): Result<RequestListEntity> {
+        return apiClient.getRequests(status, departmentId, dateFrom, dateTo, page, size)
     }
 
 	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> {

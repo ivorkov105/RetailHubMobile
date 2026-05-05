@@ -1,6 +1,10 @@
 package studying.diplom.retailhub.data.data_sources
 
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.database.RequestEntity
 import studying.diplom.retailhub.database.StoreEntity
@@ -8,6 +12,7 @@ import studying.diplom.retailhub.database.DepartmentEntity
 import studying.diplom.retailhub.database.UserEntity
 import studying.diplom.retailhub.database.SessionEntity
 import studying.diplom.retailhub.database.NotificationEntity
+import studying.diplom.retailhub.database.DeviceEntity
 
 class LocalSource(database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
@@ -111,11 +116,23 @@ class LocalSource(database: RetailHubDatabase) {
         return queries.getNotifications().executeAsList()
     }
 
+    fun getNotificationsFlow(): Flow<List<NotificationEntity>> {
+        // Используем Dispatchers.Default или создаем свой для KMP, 
+        // так как Dispatchers.IO может быть недоступен в зависимости от таргета, 
+        // но в данном проекте он используется в androidMain.
+        // Для commonMain обычно используют обертку или Dispatchers.Default.
+        return queries.getNotifications().asFlow().mapToList(Dispatchers.Default)
+    }
+
     fun saveNotifications(notifications: List<NotificationEntity>) {
         queries.transaction {
             queries.removeAllNotifications()
             notifications.forEach { queries.insertNotification(it) }
         }
+    }
+
+    fun saveNotification(notification: NotificationEntity) {
+        queries.insertNotification(notification)
     }
 
     fun markNotificationAsRead(id: String) {
@@ -133,6 +150,7 @@ class LocalSource(database: RetailHubDatabase) {
             queries.removeAllQrCodes()
             queries.removeAllNotifications()
             queries.removeSession()
+            queries.removeDevice()
         }
     }
 
@@ -163,6 +181,13 @@ class LocalSource(database: RetailHubDatabase) {
     fun clearSession() {
         queries.removeSession()
     }
+
+    // Device
+    fun getDevice(): DeviceEntity? = queries.getDevice().executeAsOneOrNull()
+    
+    fun saveDevice(id: String, fcmToken: String) = queries.saveDevice(id, fcmToken)
+    
+    fun clearDevice() = queries.removeDevice()
 }
 
 interface DatabaseDriverFactory {

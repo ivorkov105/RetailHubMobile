@@ -46,5 +46,5 @@ val dataModule = module {
 	single<ShiftRepository> { ShiftRepositoryImpl(get()) }
 	single<NotificationRepository> { NotificationRepositoryImpl(get(), get()) }
 	single<AnalyticsRepository> { AnalyticsRepositoryImpl(get()) }
-	single<DeviceRepository> { DeviceRepositoryImpl(get()) }
+	single<DeviceRepository> { DeviceRepositoryImpl(get(), get()) }
 }

@@ -46,6 +46,19 @@ class RequestRepositoryImpl(
 		)
 	}
 
+    override suspend fun getRequests(
+        status: String?,
+        departmentId: String?,
+        dateFrom: String?,
+        dateTo: String?,
+        page: Int,
+        size: Int
+    ): Result<List<RequestModel>> {
+        return remoteSource.getRequests(status, departmentId, dateFrom, dateTo, page, size).map { listEntity ->
+            listEntity.content.map { it.toModel() }
+        }
+    }
+
     override fun observeRequestUpdates(): Flow<RequestModel> {
         return wsService.requestUpdates.map { it.toModel() }
     }

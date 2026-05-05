@@ -3,6 +3,7 @@ package studying.diplom.retailhub.data.data_sources.api
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.AuthCircuitBreaker
+import io.ktor.client.plugins.auth.clearAuthTokens
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -86,6 +87,10 @@ class ApiClientImpl(
 		}.handleResponse().body()
 	}
 
+	override fun clearAuthTokens() {
+		httpClient.clearAuthTokens()
+	}
+
 	private fun HttpRequestBuilder.markAsPublicRequest() {
 		attributes.put(AuthCircuitBreaker, Unit)
 	}
@@ -108,6 +113,24 @@ class ApiClientImpl(
 	override suspend fun completeRequest(requestId: String): Result<RequestEntity> = runCatching {
 		httpClient.post("requests/$requestId/complete").handleResponse().body()
 	}
+
+    override suspend fun getRequests(
+        status: String?,
+        departmentId: String?,
+        dateFrom: String?,
+        dateTo: String?,
+        page: Int,
+        size: Int
+    ): Result<RequestListEntity> = runCatching {
+        httpClient.get("requests") {
+			if (status != null) parameter("status", status)
+	        if (departmentId != null) parameter("department_id", departmentId)
+	        if (dateFrom != null) parameter("date_from", dateFrom)
+	        if (dateTo != null) parameter("date_to", dateTo)
+            parameter("page", page)
+            parameter("size", size)
+        }.handleResponse().body()
+    }
 
 	override suspend fun getEmployeesAtShift(): Result<List<ShiftEntity>> = runCatching {
 		httpClient.get("shifts/active").handleResponse().body()
@@ -214,7 +237,7 @@ class ApiClientImpl(
 		}
 		httpClient.put("users/${updatingUser.id}") {
 			contentType(ContentType.Application.Json)
-			setBody(jsonBody)
+			setBody(updatingUser)
 		}.handleResponse().body()
 	}
 

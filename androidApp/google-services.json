@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "493440557260",
+    "project_id": "retailhub-cf470",
+    "storage_bucket": "retailhub-cf470.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493440557260:android:ca116e99567bdc6885a269",
+        "android_client_info": {
+          "package_name": "studying.diplom.retailhub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG3CsdngSIVwh0A8hIfxh3n5qQozUXHK8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

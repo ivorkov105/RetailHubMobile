@@ -25,6 +25,8 @@ import studying.diplom.retailhub.domain.models.qr_code.QrCodeModel
 import studying.diplom.retailhub.presentation.components.StatusPopup
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_arrow_left
+import studying.diplom.retailhub.resources.ic_filter_alt_off
+import studying.diplom.retailhub.resources.ic_filter_alt_on
 
 class QrListScreen : Screen {
 
@@ -49,6 +51,18 @@ class QrListScreen : Screen {
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
+                        },
+                        actions = {
+                            IconButton(onClick = { screenModel.toggleFilter() }) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (state.isFilterActive) Res.drawable.ic_filter_alt_on 
+                                        else Res.drawable.ic_filter_alt_off
+                                    ),
+                                    contentDescription = "Фильтр",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     )
                 }
@@ -58,7 +72,7 @@ class QrListScreen : Screen {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                     } else if (state.qrCodes.isEmpty()) {
                         Text(
-                            text = "QR-коды не найдены",
+                            text = if (state.isFilterActive) "Нет активных QR-кодов" else "QR-коды не найдены",
                             modifier = Modifier.align(Alignment.Center),
                             color = Color.Gray
                         )

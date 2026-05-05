@@ -67,6 +67,11 @@ CREATE TABLE SessionEntity (
     userRole TEXT
 );
 
+CREATE TABLE DeviceEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    fcmToken TEXT NOT NULL
+);
+
 -- Requests
 getRequests:
 SELECT * FROM RequestEntity
@@ -180,3 +185,14 @@ UPDATE SessionEntity SET userRole = ? WHERE id = 0;
 
 removeSession:
 DELETE FROM SessionEntity;
+
+-- Device
+getDevice:
+SELECT * FROM DeviceEntity LIMIT 1;
+
+saveDevice:
+INSERT OR REPLACE INTO DeviceEntity(id, fcmToken)
+VALUES (?, ?);
+
+removeDevice:
+DELETE FROM DeviceEntity;

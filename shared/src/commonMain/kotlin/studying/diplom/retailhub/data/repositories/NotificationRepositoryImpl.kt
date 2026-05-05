@@ -1,8 +1,6 @@
 package studying.diplom.retailhub.data.repositories
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.RemoteSource
@@ -17,7 +15,9 @@ class NotificationRepositoryImpl(
 ) : NotificationRepository {
 
     override fun getNotifications(): Flow<List<NotificationModel>> {
-        return MutableStateFlow(localSource.getNotifications().map { it.toModel() }).asStateFlow()
+        return localSource.getNotificationsFlow().map { list ->
+            list.map { it.toModel() }
+        }
     }
 
     override suspend fun refreshNotifications(): Result<Unit> {
@@ -30,5 +30,17 @@ class NotificationRepositoryImpl(
         return remoteSource.markNotificationAsRead(notificationId).onSuccess {
             localSource.markNotificationAsRead(notificationId)
         }
+    }
+
+    override suspend fun saveNotification(notification: NotificationModel) {
+        localSource.saveNotification(
+            studying.diplom.retailhub.database.NotificationEntity(
+                id = notification.id,
+                title = notification.title,
+                body = notification.body,
+                isRead = notification.isRead,
+                createdAt = notification.createdAt
+            )
+        )
     }
 }

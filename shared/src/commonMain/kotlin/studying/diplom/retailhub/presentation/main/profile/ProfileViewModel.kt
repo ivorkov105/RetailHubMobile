@@ -9,24 +9,20 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.shop.StoreModel
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.GetNotificationsUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToAuth
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateDepartment
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateEmployee
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateQr
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateStore
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToMyStore
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToQrList
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToUpdateStore
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
 
 sealed class ProfileNavigationEvent {
 	object NavigateToAuth : ProfileNavigationEvent()
@@ -36,6 +32,7 @@ sealed class ProfileNavigationEvent {
 	object NavigateToCreateEmployee : ProfileNavigationEvent()
 	object NavigateToCreateQr : ProfileNavigationEvent()
 	object NavigateToQrList : ProfileNavigationEvent()
+	object NavigateToNotifications : ProfileNavigationEvent()
 	data class NavigateToUpdateStore(val store: StoreModel) : ProfileNavigationEvent()
 }
 
@@ -45,7 +42,8 @@ class ProfileViewModel(
 	private val getDepartmentsUseCase: GetDepartmentsUseCase,
 	private val logoutUseCase: LogoutUseCase,
 	private val startShiftUseCase: StartShiftUseCase,
-	private val endShiftUseCase: EndShiftUseCase
+	private val endShiftUseCase: EndShiftUseCase,
+	private val getNotificationsUseCase: GetNotificationsUseCase
 ) : ScreenModel {
 
 	private val _state = MutableStateFlow(ProfileState())
@@ -53,6 +51,19 @@ class ProfileViewModel(
 
 	private val _navigationEvents = MutableSharedFlow<ProfileNavigationEvent>()
 	val navigationEvents: SharedFlow<ProfileNavigationEvent> = _navigationEvents.asSharedFlow()
+
+	init {
+		observeNotifications()
+	}
+
+	private fun observeNotifications() {
+		getNotificationsUseCase()
+			.onEach { notifications ->
+				val hasUnread = notifications.any { !it.isRead }
+				_state.update { it.copy(hasUnreadNotifications = hasUnread) }
+			}
+			.launchIn(screenModelScope)
+	}
 
 	fun onEvent(event: ProfileEvent) {
 		when (event) {
@@ -105,6 +116,11 @@ class ProfileViewModel(
 
 			ProfileEvent.OnStartShiftClick       -> startShift()
 			ProfileEvent.OnEndShiftClick         -> endShift()
+			ProfileEvent.OnNotificationsClick   -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToNotifications)
+				}
+			}
 		}
 	}
 

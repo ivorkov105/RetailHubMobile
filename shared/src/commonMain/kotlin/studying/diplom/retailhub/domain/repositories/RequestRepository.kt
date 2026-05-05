@@ -10,7 +10,16 @@ interface RequestRepository {
 
     suspend fun completeRequest(requestId: String): Result<RequestModel>
 
-    // WebSocket methods
+    suspend fun getRequests(
+        status: String? = null,
+        departmentId: String? = null,
+        dateFrom: String? = null,
+        dateTo: String? = null,
+        page: Int = 0,
+        size: Int = 20
+    ): Result<List<RequestModel>>
+
+    // WebSocket
     fun observeRequestUpdates(): Flow<RequestModel>
     fun connectToWebSocket()
     fun disconnectFromWebSocket()

@@ -40,8 +40,8 @@ import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.presentation.main.MainScreen
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.cancel_circle
-import studying.diplom.retailhub.resources.dark_rh_logo
-import studying.diplom.retailhub.resources.light_rh_logo
+import studying.diplom.retailhub.resources.logo_rh_dark
+import studying.diplom.retailhub.resources.logo_rh_light
 
 class AuthScreen : Screen {
 
@@ -59,7 +59,7 @@ class AuthScreen : Screen {
         }
 
         val isDark = isSystemInDarkTheme()
-        val logo = if (isDark) Res.drawable.dark_rh_logo else Res.drawable.light_rh_logo
+        val logo = if (isDark) Res.drawable.logo_rh_dark else Res.drawable.logo_rh_light
 
         Surface(
             modifier = Modifier.fillMaxSize(),
