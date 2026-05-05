@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity as ApiDepartmentEntity
+import studying.diplom.retailhub.data.entities.shop.DepartmentEntity as ApiDepartmentEntity
 import studying.diplom.retailhub.database.DepartmentEntity as DbDepartmentEntity
 import studying.diplom.retailhub.domain.models.shop.DepartmentModel
 

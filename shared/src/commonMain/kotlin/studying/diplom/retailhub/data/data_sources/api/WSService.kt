@@ -1,7 +1,7 @@
 package studying.diplom.retailhub.data.data_sources.api
 
 import kotlinx.coroutines.flow.SharedFlow
-import studying.diplom.retailhub.data.enteties.request.RequestEntity
+import studying.diplom.retailhub.data.entities.request.RequestEntity
 
 interface WSService {
     val requestUpdates: SharedFlow<RequestEntity>

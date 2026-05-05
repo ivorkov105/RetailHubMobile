@@ -1,8 +1,8 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
+import studying.diplom.retailhub.data.entities.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantStatsEntity
 import studying.diplom.retailhub.domain.models.analytics.AnalyticsDashboardModel
 import studying.diplom.retailhub.domain.models.analytics.ConsultantDetailStatsModel
 import studying.diplom.retailhub.domain.models.analytics.ConsultantStatsModel

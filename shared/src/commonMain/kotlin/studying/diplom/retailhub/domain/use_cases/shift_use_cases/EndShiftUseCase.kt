@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.domain.use_cases.shift_use_cases
 
-import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
+import studying.diplom.retailhub.data.entities.shift.ShiftEntity
 import studying.diplom.retailhub.domain.repositories.ShiftRepository
 
 class EndShiftUseCase(

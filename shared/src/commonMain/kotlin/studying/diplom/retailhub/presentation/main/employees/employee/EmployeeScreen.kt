@@ -201,7 +201,7 @@ class EmployeeScreen(
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                         
-                        if (currentMode == ScreenMode.SHOW || currentMode == ScreenMode.UPDATE) {
+                        if (currentMode == ScreenMode.SHOW) {
                             val userDepartments = state.data?.departments ?: emptyList()
 
                             if (userDepartments.isEmpty()) {
@@ -236,7 +236,7 @@ class EmployeeScreen(
                                 }
                             }
                         } else {
-                            // Режим создания: список всех отделов с чекбоксами
+                            // Режим создания или редактирования: список всех отделов с чекбоксами
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()

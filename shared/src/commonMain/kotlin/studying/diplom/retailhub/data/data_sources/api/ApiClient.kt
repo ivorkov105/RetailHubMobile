@@ -1,19 +1,20 @@
 package studying.diplom.retailhub.data.data_sources.api
 
-import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
-import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
-import studying.diplom.retailhub.data.enteties.auth.TokenEntity
-import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
-import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
-import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
-import studying.diplom.retailhub.data.enteties.request.RequestEntity
-import studying.diplom.retailhub.data.enteties.request.RequestListEntity
-import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
-import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity
-import studying.diplom.retailhub.data.enteties.shop.StoreEntity
-import studying.diplom.retailhub.data.enteties.user.UserEntity
+import studying.diplom.retailhub.data.entities.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantStatsEntity
+import studying.diplom.retailhub.data.entities.auth.LoginRequestEntity
+import studying.diplom.retailhub.data.entities.auth.TokenEntity
+import studying.diplom.retailhub.data.entities.devices.registration.DeviceRegistrationRequest
+import studying.diplom.retailhub.data.entities.devices.registration.DeviceRegistrationResponse
+import studying.diplom.retailhub.data.entities.notifications.NotificationListEntity
+import studying.diplom.retailhub.data.entities.qr_codes.QREntity
+import studying.diplom.retailhub.data.entities.request.RequestEntity
+import studying.diplom.retailhub.data.entities.request.RequestListEntity
+import studying.diplom.retailhub.data.entities.shift.ShiftEntity
+import studying.diplom.retailhub.data.entities.shop.DepartmentEntity
+import studying.diplom.retailhub.data.entities.shop.StoreEntity
+import studying.diplom.retailhub.data.entities.user.UserEntity
 
 interface ApiClient {
 
@@ -23,7 +24,6 @@ interface ApiClient {
     suspend fun getMe(): Result<UserEntity>
 
 	//Заявки
-    suspend fun getRequests(status: String, departmentId: String, dateFrom: String, dateTo: String, page: Int, size: Int): Result<RequestListEntity>
     suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit>
     suspend fun assignRequest(requestId: String): Result<RequestEntity>
     suspend fun completeRequest(requestId: String): Result<RequestEntity>
@@ -50,6 +50,7 @@ interface ApiClient {
 	suspend fun getUser(id: String): Result<UserEntity>
 	suspend fun addUser(newUser: UserEntity): Result<Unit>
 	suspend fun updateUser(updatingUser: UserEntity): Result<UserEntity>
+	suspend fun updateUserDepartments(userId: String, departmentIds: List<String>): Result<UserEntity>
 	suspend fun deleteUser(deletingUser: UserEntity): Result<Unit>
 
 	// QR коды
@@ -63,7 +64,7 @@ interface ApiClient {
     suspend fun markNotificationAsRead(notificationId: String): Result<Unit>
 
     // Устройства (FCM)
-    suspend fun registerDevice(device: DeviceEntity): Result<Unit>
+    suspend fun registerDevice(device: DeviceRegistrationRequest): Result<DeviceRegistrationResponse>
     suspend fun deleteDevice(deviceId: String): Result<Unit>
 
     // Аналитика (MANAGER)

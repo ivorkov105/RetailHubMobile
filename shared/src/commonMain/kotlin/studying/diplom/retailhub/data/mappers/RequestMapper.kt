@@ -1,8 +1,8 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.request.AssignedRequestUserEntity
+import studying.diplom.retailhub.data.entities.request.AssignedRequestUserEntity
 import studying.diplom.retailhub.domain.models.request.RequestModel
-import studying.diplom.retailhub.data.enteties.request.RequestEntity as ApiRequestEntity
+import studying.diplom.retailhub.data.entities.request.RequestEntity as ApiRequestEntity
 import studying.diplom.retailhub.database.RequestEntity as DbRequestEntity
 import studying.diplom.retailhub.domain.models.request.RequestStatus as DomainRequestStatus
 

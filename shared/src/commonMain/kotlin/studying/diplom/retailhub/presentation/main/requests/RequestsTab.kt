@@ -2,20 +2,16 @@ package studying.diplom.retailhub.presentation.main.requests
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,27 +41,14 @@ object RequestsTab : Tab {
         val state by screenModel.state.collectAsState()
         val listState = rememberLazyListState()
 
-        LaunchedEffect(Unit) {
-            screenModel.onEvent(RequestsEvent.OnLoadRequestsList)
-        }
-
-        val shouldLoadMore by remember {
-            derivedStateOf {
-                val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-                val totalItemsCount = listState.layoutInfo.totalItemsCount
-                lastVisibleItemIndex >= totalItemsCount - 5 && totalItemsCount > 0
-            }
-        }
-
-        LaunchedEffect(shouldLoadMore) {
-            if (shouldLoadMore && !state.isLastPage && !state.isPaginationLoading) {
-                screenModel.loadNextPage()
-            }
-        }
-
         Box(modifier = Modifier.fillMaxSize()) {
             if (state.isLoading && state.requests.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (state.requests.isEmpty()) {
+                Text(
+                    text = "Ожидание новых заявок...",
+                    modifier = Modifier.align(Alignment.Center)
+                )
             } else {
                 LazyColumn(
                     state = listState,
@@ -89,19 +72,6 @@ object RequestsTab : Tab {
                             },
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    }
-
-                    if (state.isPaginationLoading) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
                     }
 
                     item { Box(modifier = Modifier.padding(bottom = 16.dp)) }

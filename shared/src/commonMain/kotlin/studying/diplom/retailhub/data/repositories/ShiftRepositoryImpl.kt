@@ -1,7 +1,7 @@
 package studying.diplom.retailhub.data.repositories
 
 import studying.diplom.retailhub.data.data_sources.RemoteSource
-import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
+import studying.diplom.retailhub.data.entities.shift.ShiftEntity
 import studying.diplom.retailhub.domain.repositories.ShiftRepository
 
 class ShiftRepositoryImpl(

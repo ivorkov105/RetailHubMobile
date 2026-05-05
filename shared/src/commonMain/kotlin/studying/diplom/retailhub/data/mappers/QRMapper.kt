@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.data.mappers
 
-import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
+import studying.diplom.retailhub.data.entities.qr_codes.QREntity
 import studying.diplom.retailhub.domain.models.qr_code.QrCodeModel
 import studying.diplom.retailhub.database.QrCodeEntity as DbQREntity
 

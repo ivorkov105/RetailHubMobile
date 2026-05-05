@@ -1,20 +1,21 @@
 package studying.diplom.retailhub.data.data_sources
 
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
-import studying.diplom.retailhub.data.enteties.analytics.AnalyticsDashboardEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantDetailStatsEntity
-import studying.diplom.retailhub.data.enteties.analytics.ConsultantStatsEntity
-import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
-import studying.diplom.retailhub.data.enteties.auth.TokenEntity
-import studying.diplom.retailhub.data.enteties.devices.DeviceEntity
-import studying.diplom.retailhub.data.enteties.notifications.NotificationListEntity
-import studying.diplom.retailhub.data.enteties.qr_codes.QREntity
-import studying.diplom.retailhub.data.enteties.request.RequestEntity
-import studying.diplom.retailhub.data.enteties.request.RequestListEntity
-import studying.diplom.retailhub.data.enteties.shift.ShiftEntity
-import studying.diplom.retailhub.data.enteties.shop.DepartmentEntity
-import studying.diplom.retailhub.data.enteties.shop.StoreEntity
-import studying.diplom.retailhub.data.enteties.user.UserEntity
+import studying.diplom.retailhub.data.entities.analytics.AnalyticsDashboardEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantDetailStatsEntity
+import studying.diplom.retailhub.data.entities.analytics.ConsultantStatsEntity
+import studying.diplom.retailhub.data.entities.auth.LoginRequestEntity
+import studying.diplom.retailhub.data.entities.auth.TokenEntity
+import studying.diplom.retailhub.data.entities.devices.registration.DeviceRegistrationRequest
+import studying.diplom.retailhub.data.entities.devices.registration.DeviceRegistrationResponse
+import studying.diplom.retailhub.data.entities.notifications.NotificationListEntity
+import studying.diplom.retailhub.data.entities.qr_codes.QREntity
+import studying.diplom.retailhub.data.entities.request.RequestEntity
+import studying.diplom.retailhub.data.entities.request.RequestListEntity
+import studying.diplom.retailhub.data.entities.shift.ShiftEntity
+import studying.diplom.retailhub.data.entities.shop.DepartmentEntity
+import studying.diplom.retailhub.data.entities.shop.StoreEntity
+import studying.diplom.retailhub.data.entities.user.UserEntity
 
 class RemoteSource(
     private val apiClient: ApiClient
@@ -30,17 +31,6 @@ class RemoteSource(
 
     override suspend fun getMe(): Result<UserEntity> {
         return apiClient.getMe()
-    }
-
-    override suspend fun getRequests(
-        status: String,
-        departmentId: String,
-        dateFrom: String,
-        dateTo: String,
-        page: Int,
-        size: Int
-    ): Result<RequestListEntity> {
-        return apiClient.getRequests(status, departmentId, dateFrom, dateTo, page, size)
     }
 
     override suspend fun addRequests(newRequests: List<RequestEntity>): Result<Unit> {
@@ -122,6 +112,13 @@ class RemoteSource(
 		return apiClient.updateUser(updatingUser)
 	}
 
+	override suspend fun updateUserDepartments(
+		userId: String,
+		departmentIds: List<String>
+	): Result<UserEntity> {
+		return apiClient.updateUserDepartments(userId, departmentIds)
+	}
+
 	override suspend fun deleteUser(deletingUser: UserEntity): Result<Unit> {
 		return apiClient.deleteUser(deletingUser)
 	}
@@ -153,7 +150,7 @@ class RemoteSource(
         return apiClient.markNotificationAsRead(notificationId)
     }
 
-    override suspend fun registerDevice(device: DeviceEntity): Result<Unit> {
+    override suspend fun registerDevice(device: DeviceRegistrationRequest): Result<DeviceRegistrationResponse> {
         return apiClient.registerDevice(device)
     }
 

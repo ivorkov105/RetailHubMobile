@@ -1,7 +1,9 @@
 package studying.diplom.retailhub.data.data_sources.api
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.header
 import io.ktor.client.request.url
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
@@ -11,114 +13,199 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import studying.diplom.retailhub.data.data_sources.LocalSource
-import studying.diplom.retailhub.data.enteties.request.RequestEntity
-import studying.diplom.retailhub.data.enteties.request.StompRequestUpdateEntity
-import studying.diplom.retailhub.data.enteties.request.toRequestEntity
+import studying.diplom.retailhub.data.entities.request.RequestEntity
+import studying.diplom.retailhub.data.entities.request.StompRequestUpdateEntity
+import studying.diplom.retailhub.data.entities.request.toRequestEntity
 
-const val URL = "ws://83.147.255.205:8180/ws"
+private const val URL = "wss://83.147.255.205/ws/websocket"
+private const val LOG_TAG = "[STOMP]"
 
 class StompService(
-    private val client: HttpClient,
-    private val localSource: LocalSource
+	private val client: HttpClient,
+	private val localSource: LocalSource,
+	private val json: Json,
+	private val logger: Logger
 ) : WSService {
-    private var session: WebSocketSession? = null
-    private val scope = CoroutineScope(Dispatchers.IO + Job())
-    private val json = Json { ignoreUnknownKeys = true }
 
-    private val _requestUpdates = MutableSharedFlow<RequestEntity>()
-    override val requestUpdates: SharedFlow<RequestEntity> = _requestUpdates.asSharedFlow()
+	private var session: WebSocketSession? = null
+	private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+	private var heartbeatJob: Job? = null
 
-    override fun connect() {
-        scope.launch {
-            val token = localSource.getSession()?.accessToken ?: return@launch
-            try {
-                session = client.webSocketSession {
-                    url(URL)
-                }
+	private val isConnected = MutableStateFlow(false)
 
-                val connectFrame = """
-                    CONNECT
-                    accept-version:1.2
-                    host:83.147.255.205
-                    Authorization:Bearer $token
-                    
-                    \u0000
-                """.trimIndent().replace("\\u0000", "\u0000")
-                
-                session?.send(Frame.Text(connectFrame))
+	private val _requestUpdates = MutableSharedFlow<RequestEntity>()
+	override val requestUpdates: SharedFlow<RequestEntity> = _requestUpdates.asSharedFlow()
 
-                session?.incoming?.consumeAsFlow()
-                    ?.filterIsInstance<Frame.Text>()
-                    ?.onEach { frame ->
-                        handleFrame(frame.readText())
-                    }
-                    ?.launchIn(this)
+	override fun connect() {
+		if (isConnected.value) return
 
-            } catch (e: Exception) {
-                println("Stomp Connection Error: ${e.message}")
-                delay(5000)
-                connect()
-            }
-        }
-    }
+		scope.launch {
+			val token = localSource.getSession()?.accessToken ?: run {
+				logger.log("$LOG_TAG Auth token missing.")
+				return@launch
+			}
 
-    override fun subscribeToStore(storeId: String) {
-        val subscribeFrame = """
-            SUBSCRIBE
-            id:sub-store
-            destination:/topic/store/$storeId/requests
-            
-            \u0000
-        """.trimIndent().replace("\\u0000", "\u0000")
-        
-        scope.launch {
-            session?.send(Frame.Text(subscribeFrame))
-        }
-    }
+			try {
+				logger.log("$LOG_TAG Connecting to $URL...")
+				session = client.webSocketSession {
+					url(URL)
+				}
 
-    override fun subscribeToDepartment(departmentId: String) {
-        val subscribeFrame = """
-            SUBSCRIBE
-            id:sub-dept
-            destination:/topic/department/$departmentId/requests
-            
-            \u0000
-        """.trimIndent().replace("\\u0000", "\u0000")
-        
-        scope.launch {
-            session?.send(Frame.Text(subscribeFrame))
-        }
-    }
+				launch { observeIncoming() }
 
-    private fun handleFrame(frameText: String) {
-        if (frameText.startsWith("MESSAGE")) {
-            val body = frameText.substringAfter("\n\n").trimEnd('\u0000')
-            try {
-                val update = json.decodeFromString<StompRequestUpdateEntity>(body)
-                scope.launch {
-                    _requestUpdates.emit(update.toRequestEntity())
-                }
-            } catch (e: Exception) {
-                println("Error decoding STOMP message: ${e.message}")
-            }
-        }
-    }
+				sendConnectFrame(token)
 
-    override fun disconnect() {
-        scope.launch {
-            session?.close()
-            session = null
-        }
-    }
+				withTimeout(5000) {
+					isConnected.first { it }
+				}
+
+				logger.log("$LOG_TAG STOMP Connected & Ready.")
+			} catch (e: Exception) {
+				logger.log("$LOG_TAG Connection failed: ${e.message}")
+				cleanup()
+				delay(5000)
+				connect()
+			}
+		}
+	}
+
+	private suspend fun observeIncoming() {
+		try {
+			session?.incoming?.receiveAsFlow()
+				?.filterIsInstance<Frame.Text>()
+				?.collect { frame ->
+					val text = frame.readText()
+					if (text == "\n" || text == "\r\n") {
+						return@collect
+					}
+					logFrame("RECV", text)
+					handleFrame(text)
+				}
+		} catch (e: Exception) {
+			logger.log("$LOG_TAG Session closed: ${e.message}")
+			cleanup()
+		}
+	}
+
+	private suspend fun sendConnectFrame(token: String) {
+		val headers = mapOf(
+			"accept-version" to "1.2",
+			"host" to "83.147.255.205",
+			"Authorization" to "Bearer $token",
+			"heart-beat" to "10000,10000"
+		)
+		sendStompFrame("CONNECT", headers)
+	}
+
+	private suspend fun sendStompFrame(command: String, headers: Map<String, String>, body: String = "") {
+		val frameText = buildString {
+			append(command).append("\n")
+			headers.forEach { (key, value) -> append(key).append(":").append(value).append("\n") }
+			append("\n")
+			append(body)
+			append("\u0000")
+		}
+
+		try {
+			session?.send(Frame.Text(frameText))
+			logFrame("SEND", frameText)
+		} catch (e: Exception) {
+			logger.log("$LOG_TAG Send error: ${e.message}")
+			cleanup()
+		}
+	}
+
+	private fun startHeartbeatLoop() {
+		heartbeatJob?.cancel()
+		heartbeatJob = scope.launch {
+			while (isActive && isConnected.value) {
+				delay(10000)
+				try {
+					session?.send(Frame.Text("\n"))
+					logger.log("$LOG_TAG Heartbeat sent")
+				} catch (e: Exception) {
+					logger.log("$LOG_TAG Heartbeat failed, mes: ${e.message}")
+					cleanup()
+				}
+			}
+		}
+	}
+
+	override fun subscribeToStore(storeId: String) {
+		subscribe("/topic/store/$storeId/requests", "sub-store-$storeId")
+	}
+
+	override fun subscribeToDepartment(departmentId: String) {
+		subscribe("/topic/department/$departmentId/requests", "sub-dept-$departmentId")
+	}
+
+	private fun subscribe(destination: String, id: String) {
+		scope.launch {
+			isConnected.first { it }
+			sendStompFrame(
+				"SUBSCRIBE", mapOf(
+					"id" to id,
+					"destination" to destination,
+					"ack" to "auto"
+				)
+			)
+		}
+	}
+
+	private fun handleFrame(frameText: String) {
+		when {
+			frameText.startsWith("CONNECTED") -> {
+				isConnected.value = true
+				startHeartbeatLoop()
+			}
+
+			frameText.startsWith("MESSAGE")   -> parseMessage(frameText)
+			frameText.startsWith("ERROR")     -> logger.log("$LOG_TAG SERVER ERROR: $frameText")
+		}
+	}
+
+	private fun parseMessage(frameText: String) {
+		val body = frameText.substringAfter("\n\n").trimEnd('\u0000')
+		if (body.isBlank()) return
+
+		try {
+			val update = json.decodeFromString<StompRequestUpdateEntity>(body)
+			scope.launch { _requestUpdates.emit(update.toRequestEntity()) }
+		} catch (e: Exception) {
+			logger.log("$LOG_TAG Parse error: ${e.message}")
+		}
+	}
+
+	private fun cleanup() {
+		isConnected.value = false
+		heartbeatJob?.cancel()
+		session = null
+	}
+
+	private fun logFrame(prefix: String, text: String) {
+		val cleanText = text.replace("\u0000", "[NULL]").trim()
+		logger.log("$LOG_TAG $prefix:\n$cleanText\n---------------------------")
+	}
+
+	override fun disconnect() {
+		scope.launch {
+			cleanup()
+			session?.close()
+			logger.log("$LOG_TAG Disconnected manually.")
+		}
+	}
 }

@@ -2,8 +2,8 @@ package studying.diplom.retailhub.data.repositories
 
 import studying.diplom.retailhub.data.data_sources.LocalSource
 import studying.diplom.retailhub.data.data_sources.api.ApiClient
-import studying.diplom.retailhub.data.enteties.auth.LoginRequestEntity
-import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.entities.auth.LoginRequestEntity
+import studying.diplom.retailhub.data.entities.auth.TokenEntity
 import studying.diplom.retailhub.data.mappers.toModel
 import studying.diplom.retailhub.domain.models.auth.TokenModel
 import studying.diplom.retailhub.domain.models.user.UserModel
@@ -36,7 +36,7 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun getProfile(): Result<UserModel> {
-        return apiClient.getMe().map { 
+        return apiClient.getMe().map {
             val model = it.toModel()
             localSource.updateUserRole(model.role)
             model

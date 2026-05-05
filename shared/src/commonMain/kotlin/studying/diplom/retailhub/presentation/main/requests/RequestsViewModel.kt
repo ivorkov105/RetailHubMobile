@@ -15,12 +15,10 @@ import studying.diplom.retailhub.domain.repositories.RequestRepository
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
-import studying.diplom.retailhub.domain.use_cases.requests_use_cases.GetRequestsUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 class RequestsViewModel(
-    private val getRequestsUseCase: GetRequestsUseCase,
     private val assignRequestUseCase: AssignRequestUseCase,
     private val completeRequestUseCase: CompleteRequestUseCase,
     private val getProfileUseCase: GetProfileUseCase,
@@ -50,7 +48,12 @@ class RequestsViewModel(
                     requestRepository.subscribeToStore(user.storeId)
                 } else if (user.role == UserRoles.CONSULTANT.name) {
                     user.departments.forEach { dept ->
-                        requestRepository.subscribeToDepartment(dept.id)
+	                    println()
+	                    println()
+						println(dept.id)
+	                    println()
+	                    println()
+	                    requestRepository.subscribeToDepartment(dept.id)
                     }
                 }
             }
@@ -76,7 +79,6 @@ class RequestsViewModel(
 
     fun onEvent(event: RequestsEvent) {
         when (event) {
-            is RequestsEvent.OnLoadRequestsList -> loadRequests(isRefresh = true)
             is RequestsEvent.OnShowAcceptDialog -> {
                 _state.update { it.copy(requestToAccept = event.request) }
             }
@@ -93,7 +95,6 @@ class RequestsViewModel(
             is RequestsEvent.OnCompleteRequest -> completeRequest(event.requestId)
             is RequestsEvent.OnDismissErrorDialog -> {
                 _state.update { it.copy(error = null) }
-                loadRequests(isRefresh = true)
             }
             is RequestsEvent.OnConfirmStartShift -> startShift()
             is RequestsEvent.OnDismissStartShiftDialog -> {
@@ -102,61 +103,11 @@ class RequestsViewModel(
         }
     }
 
-    private fun loadRequests(isRefresh: Boolean = true) {
-        if (isRefresh) {
-            _state.update { it.copy(currentPage = 0, isLastPage = false, requests = emptyList()) }
-        }
-
-        if (_state.value.isLastPage) return
-
-        screenModelScope.launch {
-            if (isRefresh) {
-                _state.update { it.copy(isLoading = true, error = null) }
-            } else {
-                _state.update { it.copy(isPaginationLoading = true) }
-            }
-            
-            val currentState = _state.value
-            
-            getRequestsUseCase(
-                status = currentState.statusFilter,
-                departmentId = currentState.departmentFilter,
-                dateFrom = currentState.dateFromFilter,
-                dateTo = currentState.dateToFilter,
-                page = currentState.currentPage,
-                size = currentState.pageSize
-            ).onSuccess { result ->
-                _state.update { state ->
-                    val updatedRequests = if (isRefresh) result else state.requests + result
-                    state.copy(
-                        requests = updatedRequests,
-                        isLoading = false,
-                        isPaginationLoading = false,
-                        isLastPage = result.size < state.pageSize,
-                        currentPage = state.currentPage + 1
-                    )
-                }
-            }.onFailure { throwable ->
-                _state.update { it.copy(
-                    isLoading = false,
-                    isPaginationLoading = false,
-                    error = throwable.message ?: "Произошла ошибка при загрузке заявок"
-                ) }
-            }
-        }
-    }
-
-    fun loadNextPage() {
-        if (!_state.value.isLoading && !_state.value.isPaginationLoading && !_state.value.isLastPage) {
-            loadRequests(isRefresh = false)
-        }
-    }
-
     private fun acceptRequest(requestId: String) {
         _state.update { it.copy(requestToAccept = null, isLoading = true) }
         screenModelScope.launch {
             assignRequestUseCase(requestId).onSuccess {
-                loadRequests(isRefresh = true)
+                _state.update { it.copy(isLoading = false) }
             }.onFailure { throwable ->
                 if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
@@ -175,7 +126,7 @@ class RequestsViewModel(
         screenModelScope.launch {
             startShiftUseCase().onSuccess {
                 _state.update { it.copy(isLoading = false) }
-                loadRequests(isRefresh = true)
+                // Обновление списка произойдет через WebSocket
             }.onFailure { throwable ->
                 _state.update { it.copy(
                     isLoading = false,
@@ -189,7 +140,8 @@ class RequestsViewModel(
         _state.update { it.copy(requestToComplete = null, isLoading = true) }
         screenModelScope.launch {
             completeRequestUseCase(requestId).onSuccess {
-                loadRequests(isRefresh = true)
+                _state.update { it.copy(isLoading = false) }
+                // Обновление списка произойдет через WebSocket
             }.onFailure { throwable ->
                 if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
                     _state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
@@ -201,16 +153,6 @@ class RequestsViewModel(
                 }
             }
         }
-    }
-
-    fun onStatusFilterChanged(status: String) {
-        _state.update { it.copy(statusFilter = status) }
-        loadRequests()
-    }
-
-    fun onDepartmentFilterChanged(departmentId: String) {
-        _state.update { it.copy(departmentFilter = departmentId) }
-        loadRequests()
     }
 
     override fun onDispose() {

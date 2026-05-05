@@ -121,7 +121,7 @@ class CreateQrScreen : Screen {
 
                     Column {
                         Text(
-                            text = "Название (Label)",
+                            text = "Название",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(bottom = 4.dp)

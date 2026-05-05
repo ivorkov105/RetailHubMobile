@@ -17,45 +17,6 @@ class RequestRepositoryImpl(
     private val wsService: WSService
 ) : RequestRepository {
 
-	override suspend fun getRequests(
-		status: String,
-		departmentId: String,
-		dateFrom: String,
-		dateTo: String,
-		page: Int,
-		size: Int
-	): Result<List<RequestModel>> {
-		val remoteResult = remoteSource.getRequests(status, departmentId, dateFrom, dateTo, page, size)
-
-		return remoteResult.fold(
-			onSuccess = { requestList ->
-				val apiEntities = requestList.content
-				val dbEntities = apiEntities.map { it.toDbEntity() }
-				
-				if (page == 0) {
-					localSource.updateRequests(dbEntities)
-				} else {
-					localSource.addRequests(dbEntities)
-				}
-
-				Result.success(apiEntities.map { it.toModel() })
-			},
-			onFailure = {
-				val localData = localSource.getRequests(
-					status = status,
-					departmentId = departmentId,
-					limit = size.toLong(),
-					offset = (page * size).toLong()
-				)
-				if (localData.isNotEmpty()) {
-					Result.success(localData.map { it.toModel() })
-				} else {
-					Result.failure(it)
-				}
-			}
-		)
-	}
-
 	override suspend fun addRequests(requests: List<RequestModel>): Result<Unit> {
 		localSource.addRequests(requests.map { it.toDbEntity() })
 		return remoteSource.addRequests(requests.map { it.toApiEntity() })
@@ -90,6 +51,7 @@ class RequestRepositoryImpl(
     }
 
     override fun connectToWebSocket() {
+		println("Connecting to WS")
         wsService.connect()
     }
 

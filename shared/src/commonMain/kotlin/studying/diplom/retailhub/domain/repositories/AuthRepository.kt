@@ -1,6 +1,6 @@
 package studying.diplom.retailhub.domain.repositories
 
-import studying.diplom.retailhub.data.enteties.auth.TokenEntity
+import studying.diplom.retailhub.data.entities.auth.TokenEntity
 import studying.diplom.retailhub.domain.models.auth.TokenModel
 import studying.diplom.retailhub.domain.models.user.UserModel
 

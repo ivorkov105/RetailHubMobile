@@ -17,143 +17,159 @@ import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCa
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
-import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToAuth
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateDepartment
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateEmployee
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateQr
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToCreateStore
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToMyStore
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToQrList
+import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.NavigateToUpdateStore
 
 sealed class ProfileNavigationEvent {
-    object NavigateToAuth : ProfileNavigationEvent()
-    object NavigateToMyStore : ProfileNavigationEvent()
-    object NavigateToCreateStore : ProfileNavigationEvent()
+	object NavigateToAuth : ProfileNavigationEvent()
+	object NavigateToMyStore : ProfileNavigationEvent()
+	object NavigateToCreateStore : ProfileNavigationEvent()
 	object NavigateToCreateDepartment : ProfileNavigationEvent()
 	object NavigateToCreateEmployee : ProfileNavigationEvent()
-    object NavigateToCreateQr : ProfileNavigationEvent()
-    object NavigateToQrList : ProfileNavigationEvent()
+	object NavigateToCreateQr : ProfileNavigationEvent()
+	object NavigateToQrList : ProfileNavigationEvent()
 	data class NavigateToUpdateStore(val store: StoreModel) : ProfileNavigationEvent()
 }
 
 class ProfileViewModel(
-    private val getProfileUseCase: GetProfileUseCase,
-    private val getMyStoreUseCase: GetMyStoreUseCase,
-    private val logoutUseCase: LogoutUseCase,
-    private val startShiftUseCase: StartShiftUseCase,
-    private val endShiftUseCase: EndShiftUseCase
+	private val getProfileUseCase: GetProfileUseCase,
+	private val getMyStoreUseCase: GetMyStoreUseCase,
+	private val getDepartmentsUseCase: GetDepartmentsUseCase,
+	private val logoutUseCase: LogoutUseCase,
+	private val startShiftUseCase: StartShiftUseCase,
+	private val endShiftUseCase: EndShiftUseCase
 ) : ScreenModel {
 
-    private val _state = MutableStateFlow(ProfileState())
-    val state: StateFlow<ProfileState> = _state.asStateFlow()
+	private val _state = MutableStateFlow(ProfileState())
+	val state: StateFlow<ProfileState> = _state.asStateFlow()
 
-    private val _navigationEvents = MutableSharedFlow<ProfileNavigationEvent>()
-    val navigationEvents: SharedFlow<ProfileNavigationEvent> = _navigationEvents.asSharedFlow()
+	private val _navigationEvents = MutableSharedFlow<ProfileNavigationEvent>()
+	val navigationEvents: SharedFlow<ProfileNavigationEvent> = _navigationEvents.asSharedFlow()
 
-    fun onEvent(event: ProfileEvent) {
-        when (event) {
-	        is ProfileEvent.LoadProfile          -> loadProfile()
-	        is ProfileEvent.Logout               -> logout()
+	fun onEvent(event: ProfileEvent) {
+		when (event) {
+			is ProfileEvent.LoadProfile          -> loadProfile()
+			is ProfileEvent.Logout               -> logout()
 
-	        is ProfileEvent.OnMyStoreClick       -> {
-		        screenModelScope.launch {
-			        _navigationEvents.emit(NavigateToMyStore)
-		        }
-	        }
+			is ProfileEvent.OnMyStoreClick       -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToMyStore)
+				}
+			}
 
-	        is ProfileEvent.OnCreateStoreClick   -> {
-		        screenModelScope.launch {
-			        _navigationEvents.emit(NavigateToCreateStore)
-		        }
-	        }
+			is ProfileEvent.OnCreateStoreClick   -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToCreateStore)
+				}
+			}
 
-	        is ProfileEvent.OnUpdateStoreClick   -> {
-		        screenModelScope.launch {
-			        _state.value.store?.let {
-				        _navigationEvents.emit(NavigateToUpdateStore(it))
-			        }
-		        }
-	        }
+			is ProfileEvent.OnUpdateStoreClick   -> {
+				screenModelScope.launch {
+					_state.value.store?.let {
+						_navigationEvents.emit(NavigateToUpdateStore(it))
+					}
+				}
+			}
 
-	        ProfileEvent.OnCreateDepartmentClick -> {
-		        screenModelScope.launch {
-			        _navigationEvents.emit(NavigateToCreateDepartment)
-		        }
-	        }
+			ProfileEvent.OnCreateDepartmentClick -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToCreateDepartment)
+				}
+			}
 
-	        ProfileEvent.OnCreateEmployeeClick   -> {
+			ProfileEvent.OnCreateEmployeeClick   -> {
 				screenModelScope.launch {
 					_navigationEvents.emit(NavigateToCreateEmployee)
 				}
 			}
-	        ProfileEvent.OnQrClick               -> {
-                screenModelScope.launch {
-                    _navigationEvents.emit(NavigateToCreateQr)
-                }
-            }
-            ProfileEvent.OnQrListClick           -> {
-                screenModelScope.launch {
-                    _navigationEvents.emit(NavigateToQrList)
-                }
-            }
-            ProfileEvent.OnStartShiftClick       -> startShift()
-            ProfileEvent.OnEndShiftClick         -> endShift()
-        }
-    }
 
-    private fun loadProfile() {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-            
-            val userResult = getProfileUseCase()
-            val storeResult = getMyStoreUseCase()
+			ProfileEvent.OnQrClick               -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToCreateQr)
+				}
+			}
 
-            if (userResult.isFailure) {
-                val error = userResult.exceptionOrNull()
-                if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
-                    logout()
-                    return@launch
-                }
-            }
+			ProfileEvent.OnQrListClick           -> {
+				screenModelScope.launch {
+					_navigationEvents.emit(NavigateToQrList)
+				}
+			}
 
-            _state.update { it.copy(
-                user = userResult.getOrNull(),
-                store = storeResult.getOrNull(),
-                isLoading = false,
-                error = userResult.exceptionOrNull()?.message ?: storeResult.exceptionOrNull()?.message
-            ) }
-        }
-    }
+			ProfileEvent.OnStartShiftClick       -> startShift()
+			ProfileEvent.OnEndShiftClick         -> endShift()
+		}
+	}
 
-    private fun logout() {
-        screenModelScope.launch {
-            logoutUseCase()
-            _navigationEvents.emit(NavigateToAuth)
-        }
-    }
+	private fun loadProfile() {
+		screenModelScope.launch {
+			_state.update { it.copy(isLoading = true, error = null) }
 
-    private fun startShift() {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            startShiftUseCase().onSuccess {
-                loadProfile()
-            }.onFailure { error ->
-                handleShiftError(error)
-            }
-        }
-    }
+			val userResult = getProfileUseCase()
+			val storeResult = getMyStoreUseCase()
+			val departmentsResult = getDepartmentsUseCase()
 
-    private fun endShift() {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            endShiftUseCase().onSuccess {
-                loadProfile()
-            }.onFailure { error ->
-                handleShiftError(error)
-            }
-        }
-    }
+			if (userResult.isFailure) {
+				val error = userResult.exceptionOrNull()
+				if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
+					logout()
+					return@launch
+				}
+			}
 
-    private fun handleShiftError(error: Throwable) {
-        if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
-            logout()
-        } else {
-            _state.update { it.copy(isLoading = false, error = error.message) }
-        }
-    }
+			_state.update {
+				it.copy(
+					user = userResult.getOrNull(),
+					store = storeResult.getOrNull(),
+					allDepartments = departmentsResult.getOrNull() ?: emptyList(),
+					isLoading = false,
+					error = userResult.exceptionOrNull()?.message ?: storeResult.exceptionOrNull()?.message
+				)
+			}
+		}
+	}
+
+	private fun logout() {
+		screenModelScope.launch {
+			logoutUseCase()
+			_navigationEvents.emit(NavigateToAuth)
+		}
+	}
+
+	private fun startShift() {
+		screenModelScope.launch {
+			_state.update { it.copy(isLoading = true) }
+			startShiftUseCase().onSuccess {
+				loadProfile()
+			}.onFailure { error ->
+				handleShiftError(error)
+			}
+		}
+	}
+
+	private fun endShift() {
+		screenModelScope.launch {
+			_state.update { it.copy(isLoading = true) }
+			endShiftUseCase().onSuccess {
+				loadProfile()
+			}.onFailure { error ->
+				handleShiftError(error)
+			}
+		}
+	}
+
+	private fun handleShiftError(error: Throwable) {
+		if (error is ApiException && error.statusCode == HttpStatusCode.Unauthorized) {
+			logout()
+		} else {
+			_state.update { it.copy(isLoading = false, error = error.message) }
+		}
+	}
 }

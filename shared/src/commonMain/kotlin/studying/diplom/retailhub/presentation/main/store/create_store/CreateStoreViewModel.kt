@@ -39,7 +39,6 @@ class CreateStoreViewModel(
         when (event) {
             is CreateStoreEvent.OnNameChange -> _state.update { it.copy(name = event.value) }
             is CreateStoreEvent.OnAddressChange -> _state.update { it.copy(address = event.value) }
-            is CreateStoreEvent.OnDescriptionChange -> _state.update { it.copy(description = event.value) }
             is CreateStoreEvent.OnSaveClick -> saveStore()
             is CreateStoreEvent.OnErrorDismiss -> _state.update { it.copy(error = null) }
             is CreateStoreEvent.OnBackClick -> {
