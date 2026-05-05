@@ -5,23 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class StompRequestUpdateEntity(
-    @SerialName("eventType")
+    @SerialName("event_type")
     val eventType: String,
-    @SerialName("requestId")
+    @SerialName("request_id")
     val requestId: String,
-    @SerialName("storeId")
+    @SerialName("store_id")
     val storeId: String,
-    @SerialName("departmentId")
+    @SerialName("department_id")
     val departmentId: String,
-    @SerialName("departmentName")
+    @SerialName("department_name")
     val departmentName: String,
     @SerialName("status")
     val status: String,
-    @SerialName("assignedUserId")
+    @SerialName("assigned_user_id")
     val assignedUserId: String? = null,
-    @SerialName("assignedUserName")
+    @SerialName("assigned_user_name")
     val assignedUserName: String? = null,
-    @SerialName("clientSessionToken")
+    @SerialName("client_session_token")
     val clientSessionToken: String,
     @SerialName("timestamp")
     val timestamp: Long
@@ -35,8 +35,6 @@ fun StompRequestUpdateEntity.toRequestEntity(): RequestEntity {
         departmentName = departmentName,
         status = status,
         clientSessionToken = clientSessionToken,
-        // Так как в STOMP сообщении имя и ID приходят отдельно,
-        // маппим их в существующую структуру AssignedRequestUserEntity
         assignedUser = if (assignedUserId != null) {
             AssignedRequestUserEntity(
                 id = assignedUserId,

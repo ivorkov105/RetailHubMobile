@@ -8,5 +8,7 @@ interface WSService {
     fun connect()
     fun subscribeToStore(storeId: String)
     fun subscribeToDepartment(departmentId: String)
+    fun unsubscribeFromStore(storeId: String)
+    fun unsubscribeFromDepartment(departmentId: String)
     fun disconnect()
 }

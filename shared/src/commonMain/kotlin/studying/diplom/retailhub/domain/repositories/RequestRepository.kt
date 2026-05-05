@@ -16,4 +16,6 @@ interface RequestRepository {
     fun disconnectFromWebSocket()
     fun subscribeToStore(storeId: String)
     fun subscribeToDepartment(departmentId: String)
+    fun unsubscribeFromStore(storeId: String)
+    fun unsubscribeFromDepartment(departmentId: String)
 }

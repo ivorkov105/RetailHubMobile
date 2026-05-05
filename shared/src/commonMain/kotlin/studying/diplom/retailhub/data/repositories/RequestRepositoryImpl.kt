@@ -51,7 +51,6 @@ class RequestRepositoryImpl(
     }
 
     override fun connectToWebSocket() {
-		println("Connecting to WS")
         wsService.connect()
     }
 
@@ -65,5 +64,13 @@ class RequestRepositoryImpl(
 
     override fun subscribeToDepartment(departmentId: String) {
         wsService.subscribeToDepartment(departmentId)
+    }
+
+    override fun unsubscribeFromStore(storeId: String) {
+        wsService.unsubscribeFromStore(storeId)
+    }
+
+    override fun unsubscribeFromDepartment(departmentId: String) {
+        wsService.unsubscribeFromDepartment(departmentId)
     }
 }
