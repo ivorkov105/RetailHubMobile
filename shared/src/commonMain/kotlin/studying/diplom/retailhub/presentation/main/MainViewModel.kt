@@ -5,20 +5,19 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.LocalSource
-import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
-import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.GetNotificationsUseCase
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
 import studying.diplom.retailhub.presentation.main.requests.RequestsTab
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 class MainViewModel(
     private val userRole: String? = null,
-    private val startShiftUseCase: StartShiftUseCase,
-    private val endShiftUseCase: EndShiftUseCase,
-    private val localSource: LocalSource
+    private val localSource: LocalSource,
+    private val getNotificationsUseCase: GetNotificationsUseCase
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(
@@ -28,16 +27,17 @@ class MainViewModel(
     )
     val state: StateFlow<MainState> = _state.asStateFlow()
 
-    private fun startShift() {
-        screenModelScope.launch {
-            startShiftUseCase()
-        }
+    init {
+        observeNotifications()
     }
 
-    private fun endShift() {
-        screenModelScope.launch {
-            endShiftUseCase()
-        }
+    private fun observeNotifications() {
+        getNotificationsUseCase()
+            .onEach { notifications ->
+                val hasUnread = notifications.any { !it.isRead }
+                _state.update { it.copy(hasUnreadNotifications = hasUnread) }
+            }
+            .launchIn(screenModelScope)
     }
 
     fun onEvent(event: MainEvent) {
@@ -45,16 +45,12 @@ class MainViewModel(
             is MainEvent.SelectTab -> {
                 _state.update { it.copy(currentTab = event.tab) }
             }
-            MainEvent.OnCloseApp, MainEvent.OnLogout -> {
-                if (userRole == UserRoles.CONSULTANT.name) {
-                    endShift()
-                }
-            }
+            MainEvent.OnCloseApp, MainEvent.OnLogout -> {}
+            MainEvent.OnNotificationsClick -> {}
         }
     }
 
     override fun onDispose() {
-        // При закрытии приложения или уничтожении основного экрана очищаем кэш данных
         localSource.clearAllExceptSession()
 
         super.onDispose()
