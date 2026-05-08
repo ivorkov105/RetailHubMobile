@@ -1,8 +1,13 @@
 package studying.diplom.retailhub.domain.models.analytics
 
-import studying.diplom.retailhub.domain.models.request.RequestModel
-
 data class ConsultantDetailStatsModel(
-    val stats: ConsultantStatsModel,
-    val recentRequests: List<RequestModel>
+    val consultant: ConsultantStatsModel,
+    val dailyBreakdown: List<DailyBreakdownModel>
+)
+
+data class DailyBreakdownModel(
+    val date: String,
+    val requestsCompleted: Int,
+    val avgReactionSeconds: Double,
+    val workMinutes: Int
 )

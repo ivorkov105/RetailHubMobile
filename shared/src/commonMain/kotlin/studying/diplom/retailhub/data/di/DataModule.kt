@@ -1,5 +1,6 @@
 package studying.diplom.retailhub.data.di
 
+import app.cash.sqldelight.ColumnAdapter
 import org.koin.dsl.module
 import studying.diplom.retailhub.data.data_sources.DatabaseDriverFactory
 import studying.diplom.retailhub.data.data_sources.LocalSource
@@ -16,6 +17,8 @@ import studying.diplom.retailhub.data.repositories.RequestRepositoryImpl
 import studying.diplom.retailhub.data.repositories.ShiftRepositoryImpl
 import studying.diplom.retailhub.data.repositories.StoreRepositoryImpl
 import studying.diplom.retailhub.data.repositories.UserRepositoryImpl
+import studying.diplom.retailhub.database.AnalyticsDashboardTable
+import studying.diplom.retailhub.database.ConsultantStatsTable
 import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.domain.repositories.AnalyticsRepository
 import studying.diplom.retailhub.domain.repositories.AuthRepository
@@ -29,7 +32,36 @@ import studying.diplom.retailhub.domain.repositories.UserRepository
 val dataModule = module {
 	single {
 		val driver = get<DatabaseDriverFactory>().createDriver()
-		RetailHubDatabase(driver = driver)
+
+		val intAdapter = object : ColumnAdapter<Int, Long> {
+			override fun decode(databaseValue: Long): Int = databaseValue.toInt()
+			override fun encode(value: Int): Long = value.toLong()
+		}
+
+		val doubleAdapter = object : ColumnAdapter<Double, Double> {
+			override fun decode(databaseValue: Double): Double = databaseValue
+			override fun encode(value: Double): Double = value
+		}
+
+		RetailHubDatabase(
+			driver = driver,
+			AnalyticsDashboardTableAdapter = AnalyticsDashboardTable.Adapter(
+				totalRequestsTodayAdapter = intAdapter,
+				completedRequestsTodayAdapter = intAdapter,
+				activeConsultantsAdapter = intAdapter,
+				avgReactionTimeSecondsAdapter = doubleAdapter,
+				avgServiceTimeSecondsAdapter = doubleAdapter
+			),
+			ConsultantStatsTableAdapter = ConsultantStatsTable.Adapter(
+				totalRequestsAdapter = intAdapter,
+				completedRequestsAdapter = intAdapter,
+				avgReactionSecondsAdapter = doubleAdapter,
+				avgServiceSecondsAdapter = doubleAdapter,
+				totalWorkMinutesAdapter = intAdapter,
+				totalBusyMinutesAdapter = intAdapter,
+				totalIdleMinutesAdapter = intAdapter
+			)
+		)
 	}
 
 	single<ApiClient> { ApiClientImpl(get()) }

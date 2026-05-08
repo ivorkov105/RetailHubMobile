@@ -62,23 +62,38 @@ interface ApiClient {
 	suspend fun updateUserDepartments(userId: String, departmentIds: List<String>): Result<UserEntity>
 	suspend fun deleteUser(deletingUser: UserEntity): Result<Unit>
 
-	// QR коды
+	//QR коды
 	suspend fun getQrCodes(departmentId: String): Result<List<QREntity>>
 	suspend fun postQrCode(departmentId: String, label: String): Result<QREntity>
 	suspend fun downloadQrCode(qrCodeId: String): Result<ByteArray>
 	suspend fun deleteQrCode(qrCodeId: String): Result<Unit>
 
-    // Уведомления
+    //Уведомления
     suspend fun getNotifications(): Result<NotificationListEntity>
     suspend fun markNotificationAsRead(notificationId: String): Result<Unit>
 
-    // Устройства (FCM)
+    //Устройства
     suspend fun registerDevice(device: DeviceRegistrationRequest): Result<DeviceRegistrationResponse>
     suspend fun deleteDevice(deviceId: String): Result<Unit>
 
-    // Аналитика (MANAGER)
+    //Аналитика
     suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity>
-    suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>>
-    suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity>
-    suspend fun getRequestsHistory(dateFrom: String, dateTo: String, page: Int, size: Int): Result<RequestListEntity>
+    suspend fun getConsultantsStats(
+		dateFrom: String,
+		dateTo: String
+	): Result<List<ConsultantStatsEntity>>
+    suspend fun getConsultantDetailStats(
+		userId: String,
+		dateFrom: String,
+		dateTo: String
+	): Result<ConsultantDetailStatsEntity>
+    suspend fun getRequestsHistory(
+		status: String? = null,
+		departmentId: String? = null,
+		assignedUserId: String? = null,
+		dateFrom: String? = null,
+		dateTo: String? = null,
+		page: Int = 0,
+		size: Int = 20
+	): Result<RequestListEntity>
 }

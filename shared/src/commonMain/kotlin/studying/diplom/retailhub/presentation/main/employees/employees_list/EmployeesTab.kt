@@ -28,7 +28,6 @@ import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.presentation.main.components.BaseListItem
 import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeScreen
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
-import studying.diplom.retailhub.presentation.main.utils.UserRoles
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_list
 
@@ -71,14 +70,16 @@ object EmployeesTab : Tab {
                 CircularProgressIndicator()
             }
         } else {
-            val consultants = state.employees.filter { it.role == UserRoles.CONSULTANT.name }
+            val filteredEmployees = state.selectedRole?.let { role ->
+                state.employees.filter { it.role == role.name }
+            } ?: state.employees
             
-            if (consultants.isNotEmpty()) {
+            if (filteredEmployees.isNotEmpty()) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
                         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 0.dp)
                     ) {
-                        items(consultants) { employee ->
+                        items(filteredEmployees) { employee ->
                             val statusColor = when (employee.currentStatus) {
                                 "ACTIVE" -> Color(0xFF4CAF50)
                                 "BUSY" -> Color(0xFFF44336)

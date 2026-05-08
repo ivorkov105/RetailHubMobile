@@ -1,6 +1,7 @@
 package studying.diplom.retailhub.presentation.main.requests
 
 import studying.diplom.retailhub.domain.models.request.RequestModel
+import studying.diplom.retailhub.domain.models.request.RequestStatus
 
 data class RequestsState(
     val requests: List<RequestModel> = emptyList(),
@@ -10,5 +11,13 @@ data class RequestsState(
     val requestToComplete: RequestModel? = null,
     val currentUserId: String = "",
     val currentUserFullName: String = "",
-    val showStartShiftDialog: Boolean = false
+    val currentUserRole: String = "",
+    val currentUserDepartmentIds: List<String> = emptyList(),
+    val showStartShiftDialog: Boolean = false,
+    
+    val showFilterDialog: Boolean = false,
+    val filterStatus: RequestStatus? = null,
+    val filterDepartmentId: String = "",
+    val filterDateFrom: String? = null,
+    val filterDateTo: String? = null
 )

@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.websockets)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.voyager.navigator)
             implementation(libs.voyager.screenmodel)
             implementation(libs.voyager.bottom.sheet.navigator)
@@ -62,6 +63,10 @@ kotlin {
             
             implementation(libs.multiplatform.settings)
             implementation(libs.sqldelight.coroutines)
+
+            implementation(libs.vico.core)
+            implementation(libs.vico.compose)
+            implementation(libs.vico.compose.m3)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

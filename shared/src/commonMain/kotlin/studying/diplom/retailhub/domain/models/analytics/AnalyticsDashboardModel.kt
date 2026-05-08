@@ -1,8 +1,9 @@
 package studying.diplom.retailhub.domain.models.analytics
 
 data class AnalyticsDashboardModel(
-    val totalRequests: Int,
-    val completedRequests: Int,
-    val avgCompletionTime: Long,
-    val activeConsultants: Int
+    val totalRequestsToday: Int,
+    val completedRequestsToday: Int,
+    val activeConsultants: Int,
+    val avgReactionTimeSeconds: Double,
+    val avgServiceTimeSeconds: Double
 )

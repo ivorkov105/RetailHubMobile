@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -21,6 +22,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.domain.models.user.UserModel
 import studying.diplom.retailhub.presentation.auth.AuthScreen
+import studying.diplom.retailhub.presentation.main.components.ConsultantAnalyticsSection
 import studying.diplom.retailhub.presentation.main.components.InfoBlock
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
@@ -278,6 +280,36 @@ class EmployeeScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+
+                    if (state.isManager && currentMode == ScreenMode.SHOW) {
+                        if (state.analyticsError != null) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "Аналитика сотрудника недоступна",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = state.analyticsError!!,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        } else if (state.consultantStats != null) {
+                            ConsultantAnalyticsSection(
+                                stats = state.consultantStats!!,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
                     }
 

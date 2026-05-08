@@ -7,7 +7,25 @@ import studying.diplom.retailhub.domain.models.request.RequestModel
 
 interface AnalyticsRepository {
     suspend fun getDashboard(): Result<AnalyticsDashboardModel>
-    suspend fun getConsultantsStats(): Result<List<ConsultantStatsModel>>
-    suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsModel>
-    suspend fun getRequestsHistory(dateFrom: String, dateTo: String, page: Int, size: Int): Result<List<RequestModel>>
+    
+    suspend fun getConsultantsStats(
+        dateFrom: String,
+        dateTo: String
+    ): Result<List<ConsultantStatsModel>>
+    
+    suspend fun getConsultantDetailStats(
+        userId: String,
+        dateFrom: String,
+        dateTo: String
+    ): Result<ConsultantDetailStatsModel>
+    
+    suspend fun getRequestsHistory(
+        status: String? = null,
+        departmentId: String? = null,
+        assignedUserId: String? = null,
+        dateFrom: String? = null,
+        dateTo: String? = null,
+        page: Int = 0,
+        size: Int = 20
+    ): Result<List<RequestModel>>
 }

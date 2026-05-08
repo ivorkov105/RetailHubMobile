@@ -35,6 +35,9 @@ class EmployeesListViewModel(
                     _navigationEvents.emit(EmployeesListNavigationEvent.NavigateToEmployee(event.employee))
                 }
             }
+            is EmployeesListEvent.OnFilterRole -> {
+                _state.update { it.copy(selectedRole = event.role) }
+            }
         }
     }
 

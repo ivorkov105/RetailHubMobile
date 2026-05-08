@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.api.ApiException
+import studying.diplom.retailhub.domain.models.request.RequestStatus
 import studying.diplom.retailhub.domain.repositories.RequestRepository
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
@@ -44,11 +45,13 @@ class RequestsViewModel(
 				_state.update {
 					it.copy(
 						currentUserId = user.id,
-						currentUserFullName = "${user.firstName} ${user.lastName}"
+						currentUserFullName = "${user.firstName} ${user.lastName}",
+						currentUserRole = user.role,
+						currentUserDepartmentIds = user.departments.map { it.id }
 					)
 				}
 
-				loadInitialRequests().onSuccess {
+				loadRequests().onSuccess {
 					requestRepository.connectToWebSocket()
 
 					if (user.role == UserRoles.MANAGER.name) {
@@ -67,12 +70,28 @@ class RequestsViewModel(
 		}
 	}
 
-	private suspend fun loadInitialRequests(): Result<Unit> {
-		val requests = requestRepository.getRequests()
+	private suspend fun loadRequests(): Result<Unit> {
+		val currentState = _state.value
+		val requests = requestRepository.getRequests(
+			status = currentState.filterStatus?.name,
+			departmentId = currentState.filterDepartmentId.ifBlank { null },
+			dateFrom = currentState.filterDateFrom,
+			dateTo = currentState.filterDateTo
+		)
 
 		return requests.fold(
-			onSuccess = { requests ->
-				_state.update { it.copy(requests = requests, isLoading = false) }
+			onSuccess = { fetchedRequests ->
+				var filtered = if (currentState.filterStatus == null) {
+					fetchedRequests.filter { it.status != RequestStatus.COMPLETED && it.status != RequestStatus.CANCELED }
+				} else {
+					fetchedRequests
+				}
+
+				if (currentState.currentUserRole == UserRoles.CONSULTANT.name) {
+					filtered = filtered.filter { it.departmentId in currentState.currentUserDepartmentIds }
+				}
+
+				_state.update { it.copy(requests = filtered, isLoading = false) }
 				Result.success(Unit)
 			},
 			onFailure = { throwable ->
@@ -89,14 +108,26 @@ class RequestsViewModel(
 					val newList = state.requests.toMutableList()
 					val index = newList.indexOfFirst { it.id == updatedRequest.id }
 
+					val matchesStatus = when {
+						state.filterStatus != null -> updatedRequest.status == state.filterStatus
+						else -> updatedRequest.status != RequestStatus.COMPLETED && updatedRequest.status != RequestStatus.CANCELED
+					}
+					val matchesDept = state.filterDepartmentId.isBlank() || updatedRequest.departmentId == state.filterDepartmentId
+					val matchesUserDept = state.currentUserRole != UserRoles.CONSULTANT.name ||
+							updatedRequest.departmentId in state.currentUserDepartmentIds
+
+					val matchesFilters = matchesStatus && matchesDept && matchesUserDept
+
 					if (index != -1) {
-						val oldRequest = newList[index]
-						newList[index] = updatedRequest.copy(
-							createdAt = oldRequest.createdAt,
-							isEscalated = oldRequest.isEscalated
-						)
+						if (matchesFilters) {
+							newList[index] = updatedRequest
+						} else {
+							newList.removeAt(index)
+						}
 					} else {
-						newList.add(0, updatedRequest)
+						if (matchesFilters) {
+							newList.add(0, updatedRequest)
+						}
 					}
 					state.copy(requests = newList)
 				}
@@ -136,6 +167,43 @@ class RequestsViewModel(
 			}
 
 			is RequestsEvent.OnRetryLoad               -> loadProfile()
+
+			RequestsEvent.OnToggleFilterDialog -> {
+				_state.update { it.copy(showFilterDialog = !it.showFilterDialog) }
+			}
+			is RequestsEvent.OnFilterStatusChange -> {
+				_state.update { it.copy(filterStatus = event.status) }
+			}
+			is RequestsEvent.OnFilterDepartmentIdChange -> {
+				_state.update { it.copy(filterDepartmentId = event.departmentId) }
+			}
+			is RequestsEvent.OnFilterDateFromChange -> {
+				_state.update { it.copy(filterDateFrom = event.date) }
+			}
+			is RequestsEvent.OnFilterDateToChange -> {
+				_state.update { it.copy(filterDateTo = event.date) }
+			}
+			RequestsEvent.OnApplyFilters -> {
+				_state.update { it.copy(showFilterDialog = false, isLoading = true) }
+				screenModelScope.launch {
+					loadRequests()
+				}
+			}
+			RequestsEvent.OnClearFilters -> {
+				_state.update {
+					it.copy(
+						filterStatus = null,
+						filterDepartmentId = "",
+						filterDateFrom = null,
+						filterDateTo = null,
+						showFilterDialog = false,
+						isLoading = true
+					)
+				}
+				screenModelScope.launch {
+					loadRequests()
+				}
+			}
 		}
 	}
 

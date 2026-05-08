@@ -72,6 +72,28 @@ CREATE TABLE DeviceEntity (
     fcmToken TEXT NOT NULL
 );
 
+-- Analytics
+CREATE TABLE AnalyticsDashboardTable (
+    totalRequestsToday INTEGER AS kotlin.Int NOT NULL,
+    completedRequestsToday INTEGER AS kotlin.Int NOT NULL,
+    activeConsultants INTEGER AS kotlin.Int NOT NULL,
+    avgReactionTimeSeconds REAL AS kotlin.Double NOT NULL,
+    avgServiceTimeSeconds REAL AS kotlin.Double NOT NULL
+);
+
+CREATE TABLE ConsultantStatsTable (
+    userId TEXT NOT NULL PRIMARY KEY,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    totalRequests INTEGER AS kotlin.Int NOT NULL,
+    completedRequests INTEGER AS kotlin.Int NOT NULL,
+    avgReactionSeconds REAL AS kotlin.Double NOT NULL,
+    avgServiceSeconds REAL AS kotlin.Double NOT NULL,
+    totalWorkMinutes INTEGER AS kotlin.Int NOT NULL,
+    totalBusyMinutes INTEGER AS kotlin.Int NOT NULL,
+    totalIdleMinutes INTEGER AS kotlin.Int NOT NULL
+);
+
 -- Requests
 getRequests:
 SELECT * FROM RequestEntity
@@ -196,3 +218,24 @@ VALUES (?, ?);
 
 removeDevice:
 DELETE FROM DeviceEntity;
+
+-- Analytics Queries
+getAnalyticsDashboard:
+SELECT * FROM AnalyticsDashboardTable LIMIT 1;
+
+insertAnalyticsDashboard:
+INSERT INTO AnalyticsDashboardTable(totalRequestsToday, completedRequestsToday, activeConsultants, avgReactionTimeSeconds, avgServiceTimeSeconds)
+VALUES ?;
+
+clearAnalyticsDashboard:
+DELETE FROM AnalyticsDashboardTable;
+
+getConsultantsStats:
+SELECT * FROM ConsultantStatsTable;
+
+insertConsultantStats:
+INSERT OR REPLACE INTO ConsultantStatsTable(userId, firstName, lastName, totalRequests, completedRequests, avgReactionSeconds, avgServiceSeconds, totalWorkMinutes, totalBusyMinutes, totalIdleMinutes)
+VALUES ?;
+
+clearConsultantsStats:
+DELETE FROM ConsultantStatsTable;

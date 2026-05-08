@@ -307,23 +307,42 @@ class ApiClientImpl(
 		httpClient.get("analytics/dashboard").handleResponse().body()
 	}
 
-	override suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>> = runCatching {
-		httpClient.get("analytics/consultants").handleResponse().body()
+	override suspend fun getConsultantsStats(
+		dateFrom: String,
+		dateTo: String
+	): Result<List<ConsultantStatsEntity>> = runCatching {
+		httpClient.get("analytics/consultants") {
+			parameter("date_from", dateFrom)
+			parameter("date_to", dateTo)
+		}.handleResponse().body()
 	}
 
-	override suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity> = runCatching {
-		httpClient.get("analytics/consultants/$userId").handleResponse().body()
+	override suspend fun getConsultantDetailStats(
+		userId: String,
+		dateFrom: String,
+		dateTo: String
+	): Result<ConsultantDetailStatsEntity> = runCatching {
+		httpClient.get("analytics/consultants/$userId") {
+			parameter("date_from", dateFrom)
+			parameter("date_to", dateTo)
+		}.handleResponse().body()
 	}
 
 	override suspend fun getRequestsHistory(
-		dateFrom: String,
-		dateTo: String,
+		status: String?,
+		departmentId: String?,
+		assignedUserId: String?,
+		dateFrom: String?,
+		dateTo: String?,
 		page: Int,
 		size: Int
 	): Result<RequestListEntity> = runCatching {
 		httpClient.get("analytics/requests") {
-			parameter("date_from", dateFrom)
-			parameter("date_to", dateTo)
+			if (status != null) parameter("status", status)
+			if (departmentId != null) parameter("department_id", departmentId)
+			if (assignedUserId != null) parameter("assigned_user_id", assignedUserId)
+			if (dateFrom != null) parameter("date_from", dateFrom)
+			if (dateTo != null) parameter("date_to", dateTo)
 			parameter("page", page)
 			parameter("size", size)
 		}.handleResponse().body()

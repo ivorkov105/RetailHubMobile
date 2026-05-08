@@ -6,6 +6,9 @@ import studying.diplom.retailhub.domain.repositories.AnalyticsRepository
 class GetConsultantDetailStatsUseCase(
     private val repository: AnalyticsRepository
 ) {
-    suspend operator fun invoke(userId: String): Result<ConsultantDetailStatsModel> = 
-        repository.getConsultantDetailStats(userId)
+    suspend operator fun invoke(
+        userId: String,
+        dateFrom: String,
+        dateTo: String
+    ): Result<ConsultantDetailStatsModel> = repository.getConsultantDetailStats(userId, dateFrom, dateTo)
 }

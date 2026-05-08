@@ -177,20 +177,30 @@ class RemoteSource(
         return apiClient.getAnalyticsDashboard()
     }
 
-    override suspend fun getConsultantsStats(): Result<List<ConsultantStatsEntity>> {
-        return apiClient.getConsultantsStats()
+    override suspend fun getConsultantsStats(
+		dateFrom: String,
+		dateTo: String
+	): Result<List<ConsultantStatsEntity>> {
+        return apiClient.getConsultantsStats(dateFrom, dateTo)
     }
 
-    override suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsEntity> {
-        return apiClient.getConsultantDetailStats(userId)
+    override suspend fun getConsultantDetailStats(
+		userId: String,
+		dateFrom: String,
+		dateTo: String
+	): Result<ConsultantDetailStatsEntity> {
+        return apiClient.getConsultantDetailStats(userId, dateFrom, dateTo)
     }
 
     override suspend fun getRequestsHistory(
-        dateFrom: String,
-        dateTo: String,
-        page: Int,
-        size: Int
-    ): Result<RequestListEntity> {
-        return apiClient.getRequestsHistory(dateFrom, dateTo, page, size)
+		status: String?,
+		departmentId: String?,
+		assignedUserId: String?,
+		dateFrom: String?,
+		dateTo: String?,
+		page: Int,
+		size: Int
+	): Result<RequestListEntity> {
+        return apiClient.getRequestsHistory(status, departmentId, assignedUserId, dateFrom, dateTo, page, size)
     }
 }

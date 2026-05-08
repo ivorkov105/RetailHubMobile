@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -22,7 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,13 +41,18 @@ import cafe.adriel.voyager.navigator.tab.TabNavigator
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.parameter.parametersOf
 import studying.diplom.retailhub.presentation.main.departments.department_list.DepartmentsListTab
+import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesListEvent
+import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesListViewModel
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
 import studying.diplom.retailhub.presentation.main.profile.ProfileTab
+import studying.diplom.retailhub.presentation.main.requests.RequestsEvent
 import studying.diplom.retailhub.presentation.main.requests.RequestsTab
+import studying.diplom.retailhub.presentation.main.requests.RequestsViewModel
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
 import studying.diplom.retailhub.presentation.notifications.NotificationsScreen
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_bell
+import studying.diplom.retailhub.resources.ic_filter_alt_on
 
 class MainScreen(private val userRole: String? = null) : Screen {
 
@@ -51,8 +60,12 @@ class MainScreen(private val userRole: String? = null) : Screen {
 	@Composable
 	override fun Content() {
 		val screenModel: MainViewModel = koinScreenModel { parametersOf(userRole) }
+		val employeesListViewModel: EmployeesListViewModel = koinScreenModel()
+		val requestsViewModel: RequestsViewModel = koinScreenModel()
 		val state by screenModel.state.collectAsState()
 		val navigator = LocalNavigator.currentOrThrow
+
+		var showFilterMenu by remember { mutableStateOf(false) }
 
 		DisposableEffect(Unit) {
 			onDispose {
@@ -70,10 +83,62 @@ class MainScreen(private val userRole: String? = null) : Screen {
 					TopAppBar(
 						title = { Text(tabNavigator.current.options.title) },
 						actions = {
+							if (tabNavigator.current == EmployeesTab) {
+								Box {
+									IconButton(onClick = { showFilterMenu = true }) {
+										Icon(
+											painter = painterResource(Res.drawable.ic_filter_alt_on),
+											contentDescription = "Фильтр",
+											modifier = Modifier.size(24.dp)
+										)
+									}
+
+									DropdownMenu(
+										expanded = showFilterMenu,
+										onDismissRequest = { showFilterMenu = false }
+									) {
+										DropdownMenuItem(
+											text = { Text("Все") },
+											onClick = {
+												employeesListViewModel.onEvent(EmployeesListEvent.OnFilterRole(null))
+												showFilterMenu = false
+											}
+										)
+										UserRoles.entries.forEach { role ->
+											DropdownMenuItem(
+												text = {
+													Text(
+														when (role) {
+															UserRoles.MANAGER -> "Менеджеры"
+															UserRoles.CONSULTANT -> "Консультанты"
+														}
+													)
+												},
+												onClick = {
+													employeesListViewModel.onEvent(EmployeesListEvent.OnFilterRole(role))
+													showFilterMenu = false
+												}
+											)
+										}
+									}
+								}
+							}
+							
+							if (tabNavigator.current == RequestsTab) {
+								IconButton(onClick = { requestsViewModel.onEvent(RequestsEvent.OnToggleFilterDialog) }) {
+									Icon(
+										painter = painterResource(Res.drawable.ic_filter_alt_on),
+										contentDescription = "Фильтр",
+										modifier = Modifier.size(24.dp)
+									)
+								}
+							}
+
 							Box(modifier = Modifier.padding(end = 8.dp)) {
 								IconButton(
 									onClick = {
-										navigator.push(NotificationsScreen()
+										navigator.push(
+											NotificationsScreen()
 										)
 									}
 								) {
@@ -88,12 +153,12 @@ class MainScreen(private val userRole: String? = null) : Screen {
 										modifier = Modifier
 											.align(Alignment.BottomEnd)
 											.padding(
-												bottom = 8.dp,
-												end = 8.dp
+												bottom = 12.dp,
+												end = 12.dp
 											)
-											.size(12.dp)
+											.size(10.dp)
 											.background(
-												Color(0xFF00A3FF),
+												MaterialTheme.colorScheme.primary,
 												CircleShape
 											)
 									)

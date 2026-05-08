@@ -1,19 +1,11 @@
 package studying.diplom.retailhub.presentation.main.requests
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,6 +14,7 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.domain.models.request.RequestStatus
+import studying.diplom.retailhub.presentation.main.components.RequestsFilterDialog
 import studying.diplom.retailhub.presentation.main.requests.components.RequestsListItem
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_list
@@ -46,7 +39,7 @@ object RequestsTab : Tab {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (state.requests.isEmpty() && !state.isLoading) {
                 Text(
-                    text = "Ожидание новых заявок...",
+                    text = "Заявок не найдено",
                     modifier = Modifier.align(Alignment.Center)
                 )
             } else {
@@ -82,24 +75,32 @@ object RequestsTab : Tab {
                 }
             }
 
+            if (state.showFilterDialog) {
+                RequestsFilterDialog(
+                    selectedStatus = state.filterStatus,
+                    onStatusChange = { screenModel.onEvent(RequestsEvent.OnFilterStatusChange(it)) },
+                    dateFrom = state.filterDateFrom,
+                    onDateFromChange = { screenModel.onEvent(RequestsEvent.OnFilterDateFromChange(it)) },
+                    dateTo = state.filterDateTo,
+                    onDateToChange = { screenModel.onEvent(RequestsEvent.OnFilterDateToChange(it)) },
+                    onDismiss = { screenModel.onEvent(RequestsEvent.OnToggleFilterDialog) },
+                    onApply = { screenModel.onEvent(RequestsEvent.OnApplyFilters) },
+                    onClear = { screenModel.onEvent(RequestsEvent.OnClearFilters) }
+                )
+            }
+
             state.requestToAccept?.let { request ->
                 AlertDialog(
                     onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) },
                     title = { Text(text = "Взять заявку?") },
                     text = { Text(text = "Вы уверены, что хотите взять в работу заявку из отдела ${request.departmentName}?") },
                     confirmButton = {
-                        TextButton(
-                            onClick = { 
-                                screenModel.onEvent(RequestsEvent.OnAcceptRequest(request.id)) 
-                            }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnAcceptRequest(request.id)) }) {
                             Text("Да")
                         }
                     },
                     dismissButton = {
-                        TextButton(
-                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissAcceptDialog) }) {
                             Text("Нет")
                         }
                     }
@@ -112,18 +113,12 @@ object RequestsTab : Tab {
                     title = { Text(text = "Завершить заявку?") },
                     text = { Text(text = "Вы уверены, что хотите завершить работу над заявкой из отдела ${request.departmentName}?") },
                     confirmButton = {
-                        TextButton(
-                            onClick = { 
-                                screenModel.onEvent(RequestsEvent.OnCompleteRequest(request.id)) 
-                            }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnCompleteRequest(request.id)) }) {
                             Text("Да")
                         }
                     },
                     dismissButton = {
-                        TextButton(
-                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissCompleteDialog) }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissCompleteDialog) }) {
                             Text("Нет")
                         }
                     }
@@ -136,18 +131,12 @@ object RequestsTab : Tab {
                     title = { Text(text = "Смена не начата") },
                     text = { Text(text = "Чтобы принимать заявки, необходимо начать смену. Начать сейчас?") },
                     confirmButton = {
-                        TextButton(
-                            onClick = { 
-                                screenModel.onEvent(RequestsEvent.OnConfirmStartShift) 
-                            }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnConfirmStartShift) }) {
                             Text("Да")
                         }
                     },
                     dismissButton = {
-                        TextButton(
-                            onClick = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) }) {
                             Text("Нет")
                         }
                     }
@@ -160,20 +149,12 @@ object RequestsTab : Tab {
                     title = { Text(text = "Ошибка") },
                     text = { Text(text = error) },
                     confirmButton = {
-                        TextButton(
-                            onClick = { 
-                                screenModel.onEvent(RequestsEvent.OnRetryLoad) 
-                            }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnRetryLoad) }) {
                             Text("Повторить")
                         }
                     },
                     dismissButton = {
-                        TextButton(
-                            onClick = { 
-                                screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) 
-                            }
-                        ) {
+                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) }) {
                             Text("Закрыть")
                         }
                     }

@@ -16,21 +16,35 @@ class AnalyticsRepositoryImpl(
         return remoteSource.getAnalyticsDashboard().map { it.toModel() }
     }
 
-    override suspend fun getConsultantsStats(): Result<List<ConsultantStatsModel>> {
-        return remoteSource.getConsultantsStats().map { list -> list.map { it.toModel() } }
+    override suspend fun getConsultantsStats(
+        dateFrom: String,
+        dateTo: String
+    ): Result<List<ConsultantStatsModel>> {
+        return remoteSource.getConsultantsStats(dateFrom, dateTo).map { list -> 
+            list.map { it.toModel() } 
+        }
     }
 
-    override suspend fun getConsultantDetailStats(userId: String): Result<ConsultantDetailStatsModel> {
-        return remoteSource.getConsultantDetailStats(userId).map { it.toModel() }
+    override suspend fun getConsultantDetailStats(
+        userId: String,
+        dateFrom: String,
+        dateTo: String
+    ): Result<ConsultantDetailStatsModel> {
+        return remoteSource.getConsultantDetailStats(userId, dateFrom, dateTo).map { it.toModel() }
     }
 
     override suspend fun getRequestsHistory(
-        dateFrom: String,
-        dateTo: String,
+        status: String?,
+        departmentId: String?,
+        assignedUserId: String?,
+        dateFrom: String?,
+        dateTo: String?,
         page: Int,
         size: Int
     ): Result<List<RequestModel>> {
-        return remoteSource.getRequestsHistory(dateFrom, dateTo, page, size).map { list ->
+        return remoteSource.getRequestsHistory(
+            status, departmentId, assignedUserId, dateFrom, dateTo, page, size
+        ).map { list ->
             list.content.map { it.toModel() }
         }
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.shop.StoreModel
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetAnalyticsDashboardUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
@@ -20,6 +21,7 @@ import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseC
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
 import studying.diplom.retailhub.presentation.main.profile.ProfileNavigationEvent.*
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 sealed class ProfileNavigationEvent {
 	object NavigateToAuth : ProfileNavigationEvent()
@@ -38,7 +40,8 @@ class ProfileViewModel(
 	private val getDepartmentsUseCase: GetDepartmentsUseCase,
 	private val logoutUseCase: LogoutUseCase,
 	private val startShiftUseCase: StartShiftUseCase,
-	private val endShiftUseCase: EndShiftUseCase
+	private val endShiftUseCase: EndShiftUseCase,
+	private val getAnalyticsDashboardUseCase: GetAnalyticsDashboardUseCase
 ) : ScreenModel {
 
 	private val _state = MutableStateFlow(ProfileState())
@@ -103,7 +106,7 @@ class ProfileViewModel(
 
 	private fun loadProfile() {
 		screenModelScope.launch {
-			_state.update { it.copy(isLoading = true, error = null) }
+			_state.update { it.copy(isLoading = true, error = null, analyticsError = null) }
 
 			val userResult = getProfileUseCase()
 			val storeResult = getMyStoreUseCase()
@@ -117,11 +120,20 @@ class ProfileViewModel(
 				}
 			}
 
+			val user = userResult.getOrNull()
+			var dashboardResult: Result<studying.diplom.retailhub.domain.models.analytics.AnalyticsDashboardModel>? = null
+			
+			if (user?.role?.uppercase() == UserRoles.MANAGER.name) {
+				dashboardResult = getAnalyticsDashboardUseCase()
+			}
+
 			_state.update {
 				it.copy(
-					user = userResult.getOrNull(),
+					user = user,
 					store = storeResult.getOrNull(),
 					allDepartments = departmentsResult.getOrNull() ?: emptyList(),
+					dashboard = dashboardResult?.getOrNull(),
+					analyticsError = dashboardResult?.exceptionOrNull()?.message,
 					isLoading = false,
 					error = userResult.exceptionOrNull()?.message ?: storeResult.exceptionOrNull()?.message
 				)

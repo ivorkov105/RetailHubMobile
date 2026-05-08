@@ -4,6 +4,7 @@ import org.koin.dsl.module
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetAnalyticsDashboardUseCase
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantDetailStatsUseCase
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantsStatsUseCase
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetRequestsHistoryUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AddRequestsUseCase
@@ -59,4 +60,5 @@ val useCaseModule = module {
     factory { GetAnalyticsDashboardUseCase(get()) }
     factory { GetConsultantsStatsUseCase(get()) }
     factory { GetConsultantDetailStatsUseCase(get()) }
+    factory { GetRequestsHistoryUseCase(get()) }
 }

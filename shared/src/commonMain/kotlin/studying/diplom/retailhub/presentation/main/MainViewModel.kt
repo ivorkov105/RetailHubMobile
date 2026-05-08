@@ -34,7 +34,7 @@ class MainViewModel(
     private fun observeNotifications() {
         getNotificationsUseCase()
             .onEach { notifications ->
-                val hasUnread = notifications.any { !it.isRead }
+                val hasUnread = notifications.any { it.isRead }
                 _state.update { it.copy(hasUnreadNotifications = hasUnread) }
             }
             .launchIn(screenModelScope)

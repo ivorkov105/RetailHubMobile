@@ -11,8 +11,15 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 import studying.diplom.retailhub.data.data_sources.api.ApiException
 import studying.diplom.retailhub.domain.models.user.UserModel
+import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsultantDetailStatsUseCase
+import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.AddUserUseCase
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.DeleteUserUseCase
@@ -33,6 +40,8 @@ class EmployeeViewModel(
 	private val deleteUserUseCase: DeleteUserUseCase,
 	private val getDepartmentsUseCase: GetDepartmentsUseCase,
 	private val updateUserDepartmentsUseCase: UpdateUserDepartmentsUseCase,
+	private val getProfileUseCase: GetProfileUseCase,
+	private val getConsultantDetailStatsUseCase: GetConsultantDetailStatsUseCase,
 	private val initialEmployee: UserModel? = null
 ) : ScreenModel {
 
@@ -59,6 +68,34 @@ class EmployeeViewModel(
 
 	init {
 		loadDepartments()
+		checkManagerStatus()
+	}
+
+	private fun checkManagerStatus() {
+		screenModelScope.launch {
+			getProfileUseCase().onSuccess { user ->
+				val isManager = user.role.uppercase() == UserRoles.MANAGER.name
+				_state.update { it.copy(isManager = isManager) }
+				val employeeId = initialEmployee?.id
+				if (isManager && !employeeId.isNullOrEmpty()) {
+					loadConsultantStats(employeeId)
+				}
+			}
+		}
+	}
+
+	private fun loadConsultantStats(userId: String) {
+		screenModelScope.launch {
+			val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+			val dateTo = now.date.toString()
+			val dateFrom = now.date.minus(1, DateTimeUnit.DAY).toString()
+
+			getConsultantDetailStatsUseCase(userId, dateFrom, dateTo).onSuccess { stats ->
+				_state.update { it.copy(consultantStats = stats, analyticsError = null) }
+			}.onFailure { error ->
+				_state.update { it.copy(analyticsError = error.message) }
+			}
+		}
 	}
 
 	private fun handleError(throwable: Throwable) {
@@ -124,6 +161,9 @@ class EmployeeViewModel(
 			_state.update { it.copy(isLoading = true, error = null) }
 			getUserUseCase(id).onSuccess { user ->
 				_state.update { it.copy(data = user, isLoading = false) }
+				if (_state.value.isManager) {
+					loadConsultantStats(user.id)
+				}
 			}.onFailure { handleError(it) }
 		}
 	}

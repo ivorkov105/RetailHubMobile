@@ -17,21 +17,26 @@ import studying.diplom.retailhub.domain.models.user.UserModel
 import studying.diplom.retailhub.presentation.notifications.NotificationsViewModel
 
 val viewModelModule = module {
-	factory { RequestsViewModel(get(), get(), get(), get(), get()) }
+	single { RequestsViewModel(get(), get(), get(), get(), get()) }
 	factory { AuthViewModel(get(), get(), get(), get()) }
 	factory { params -> MainViewModel(params.getOrNull(), get(), get()) }
-	factory { ProfileViewModel(get(), get(), get(), get(), get(), get()) }
+	factory { ProfileViewModel(get(), get(), get(), get(), get(), get(), get()) }
 	factory { params -> CreateStoreViewModel(get(), get(), params.getOrNull()) }
 	factory { MyStoreViewModel(get()) }
-	factory { params -> DepartmentViewModel(get(), get(), get(), get(), params.getOrNull()) }
+	factory { params -> 
+        DepartmentViewModel(
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), 
+            params.getOrNull()
+        ) 
+    }
 	factory { DepartmentsListViewModel(get()) }
 	factory { params -> 
         EmployeeViewModel(
-            get(), get(), get(), get(), get(), get(), 
+            get(), get(), get(), get(), get(), get(), get(), get(),
             params.getOrNull<UserModel>()
         ) 
     }
-	factory { EmployeesListViewModel(get()) }
+	single { EmployeesListViewModel(get()) }
     factory { CreateQrViewModel(get(), get()) }
     factory { QrListViewModel(get(), get(), get(), get()) }
     factory { NotificationsViewModel(get(), get(), get()) }

@@ -20,6 +20,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +41,20 @@ fun QrCodeItem(
 	onDeactivate: () -> Unit,
 	onDownload: () -> Unit
 ) {
+	var showDeactivateDialog by remember { mutableStateOf(false) }
+
+	if (showDeactivateDialog) {
+		DeleteConfirmDialog(
+			title = "Деактивировать QR-код?",
+			text = "Вы уверены, что хотите деактивировать этот QR-код? Он перестанет работать для клиентов.",
+			onDismiss = { showDeactivateDialog = false },
+			onConfirm = {
+				showDeactivateDialog = false
+				onDeactivate()
+			}
+		)
+	}
+
 	Card(
 		modifier = Modifier
 			.fillMaxWidth()
@@ -108,7 +126,9 @@ fun QrCodeItem(
 						}
 
 						Button(
-							onClick = onDeactivate,
+							onClick = {
+								showDeactivateDialog = true
+							},
 							modifier = Modifier.weight(1f),
 							contentPadding = PaddingValues(horizontal = 4.dp),
 							colors = ButtonDefaults.buttonColors(

@@ -38,6 +38,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import kotlinx.coroutines.flow.collectLatest
 import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.presentation.auth.AuthScreen
+import studying.diplom.retailhub.presentation.main.components.AnalyticsDashboardSection
 import studying.diplom.retailhub.presentation.main.components.DashboardButton
 import studying.diplom.retailhub.presentation.main.components.DashboardItem
 import studying.diplom.retailhub.presentation.main.departments.department.DepartmentScreen
@@ -127,12 +128,29 @@ object ProfileTab : Tab {
 					contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
 					modifier = Modifier.fillMaxSize()
 				) {
+					state.error?.let { error ->
+						item(span = { GridItemSpan(2) }) {
+							Surface(
+								color = MaterialTheme.colorScheme.errorContainer,
+								shape = RoundedCornerShape(8.dp),
+								modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+							) {
+								Text(
+									text = error,
+									color = MaterialTheme.colorScheme.onErrorContainer,
+									modifier = Modifier.padding(8.dp),
+									style = MaterialTheme.typography.bodySmall
+								)
+							}
+						}
+					}
+
 					item(span = { GridItemSpan(2) }) {
 						Column(horizontalAlignment = Alignment.CenterHorizontally) {
 							Surface(
 								modifier = Modifier
 									.fillMaxWidth()
-									.height(60.dp),
+								    .height(60.dp),
 								color = Color(0xFF00A3FF),
 								shape = RoundedCornerShape(12.dp)
 							) {
@@ -195,7 +213,50 @@ object ProfileTab : Tab {
 						}
 					}
 
-					if (state.user?.role == UserRoles.MANAGER.name) {
+					if (state.user?.role?.uppercase() == UserRoles.MANAGER.name) {
+						state.analyticsError?.let { analyticsError ->
+							item(span = { GridItemSpan(2) }) {
+								Surface(
+									color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+									shape = RoundedCornerShape(12.dp),
+									modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+								) {
+									Column(modifier = Modifier.padding(16.dp)) {
+										Text(
+											text = "Аналитика временно недоступна",
+											style = MaterialTheme.typography.titleSmall,
+											fontWeight = FontWeight.Bold,
+											color = MaterialTheme.colorScheme.onErrorContainer
+										)
+										Spacer(modifier = Modifier.height(4.dp))
+										Text(
+											text = analyticsError,
+											style = MaterialTheme.typography.bodySmall,
+											color = MaterialTheme.colorScheme.onErrorContainer
+										)
+									}
+								}
+							}
+						}
+
+						state.dashboard?.let { dashboard ->
+							item(span = { GridItemSpan(2) }) {
+								AnalyticsDashboardSection(
+									dashboard = dashboard,
+									modifier = Modifier.padding(top = 16.dp)
+								)
+							}
+						}
+
+						item(span = { GridItemSpan(2) }) {
+							Text(
+								text = "Управление",
+								style = MaterialTheme.typography.titleMedium,
+								fontWeight = FontWeight.Bold,
+								modifier = Modifier.padding(top = 16.dp)
+							)
+						}
+
 						val dashboardItems = listOf(
 							DashboardItem("Создать магазин", ProfileEvent.OnCreateStoreClick),
 							DashboardItem("Обновить магазин", ProfileEvent.OnUpdateStoreClick),
@@ -208,7 +269,7 @@ object ProfileTab : Tab {
 						items(dashboardItems) { item ->
 							DashboardButton(item) { screenModel.onEvent(item.event) }
 						}
-					} else if (state.user?.role == UserRoles.CONSULTANT.name) {
+					} else if (state.user?.role?.uppercase() == UserRoles.CONSULTANT.name) {
 						val status = state.user?.currentStatus ?: "OFFLINE"
 						val isBusy = status == "BUSY"
 						val isOffline = status == "OFFLINE"
