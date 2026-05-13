@@ -1,10 +1,14 @@
 package studying.diplom.retailhub.data.data_sources
 
+import androidx.paging.PagingSource
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.paging3.QueryPagingSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.database.RequestEntity
 import studying.diplom.retailhub.database.StoreEntity
@@ -13,23 +17,78 @@ import studying.diplom.retailhub.database.UserEntity
 import studying.diplom.retailhub.database.SessionEntity
 import studying.diplom.retailhub.database.NotificationEntity
 import studying.diplom.retailhub.database.DeviceEntity
+import studying.diplom.retailhub.database.RequestRemoteKeys
 
-class LocalSource(database: RetailHubDatabase) {
+class LocalSource(private val database: RetailHubDatabase) {
     private val queries = database.retailHubDatabaseQueries
+
+    val requestChanges = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    fun <T> withTransaction(block: () -> T): T {
+        return database.retailHubDatabaseQueries.transactionWithResult {
+            block()
+        }
+    }
 
     // Requests
     fun getRequests(
         status: String = "",
         departmentId: String = "",
+        dateFrom: String = "",
+        dateTo: String = "",
         limit: Long = 20,
         offset: Long = 0
     ): List<RequestEntity> {
         return queries.getRequests(
             status = status,
             departmentId = departmentId,
+            dateFrom = dateFrom,
+            dateTo = dateTo,
             limit = limit,
             offset = offset
         ).executeAsList()
+    }
+
+    fun getRequestsPaged(
+        status: String = "",
+        departmentId: String = "",
+        dateFrom: String = "",
+        dateTo: String = ""
+    ): PagingSource<Int, RequestEntity> {
+        return QueryPagingSource(
+            countQuery = queries.countRequests(
+                status = status,
+                departmentId = departmentId,
+                dateFrom = dateFrom,
+                dateTo = dateTo
+            ),
+            transacter = queries,
+            context = Dispatchers.IO,
+            queryProvider = { limit, offset ->
+                queries.getRequests(
+                    status = status,
+                    departmentId = departmentId,
+                    dateFrom = dateFrom,
+                    dateTo = dateTo,
+                    limit = limit,
+                    offset = offset
+                )
+            }
+        ) as PagingSource<Int, RequestEntity>
+    }
+
+    fun countRequests(
+        status: String = "",
+        departmentId: String = "",
+        dateFrom: String = "",
+        dateTo: String = ""
+    ): Long {
+        return queries.countRequests(
+            status = status,
+            departmentId = departmentId,
+            dateFrom = dateFrom,
+            dateTo = dateTo
+        ).executeAsOne()
     }
 
     fun addRequests(newRequests: List<RequestEntity>) {
@@ -38,18 +97,28 @@ class LocalSource(database: RetailHubDatabase) {
                 queries.insertRequest(request)
             }
         }
+        requestChanges.tryEmit(Unit)
     }
 
-    fun updateRequests(newRequests: List<RequestEntity>) {
+    fun clearRequests() {
+        queries.removeAllRequests()
+        requestChanges.tryEmit(Unit)
+    }
+
+    //Remote Keys
+    fun getRemoteKey(id: String): RequestRemoteKeys? {
+        return queries.getRemoteKey(id).executeAsOneOrNull()
+    }
+
+    fun insertRemoteKeys(remoteKeys: List<RequestRemoteKeys>) {
         queries.transaction {
-            queries.removeAllRequests()
-            newRequests.forEach { request ->
-                queries.insertRequest(request)
+            remoteKeys.forEach { key ->
+                queries.insertRemoteKeys(key)
             }
         }
     }
 
-    fun clearRequests() = queries.removeAllRequests()
+    fun clearRemoteKeys() = queries.clearRemoteKeys()
 
     // Stores
     fun getStore(): StoreEntity? {
@@ -117,10 +186,6 @@ class LocalSource(database: RetailHubDatabase) {
     }
 
     fun getNotificationsFlow(): Flow<List<NotificationEntity>> {
-        // Используем Dispatchers.Default или создаем свой для KMP, 
-        // так как Dispatchers.IO может быть недоступен в зависимости от таргета, 
-        // но в данном проекте он используется в androidMain.
-        // Для commonMain обычно используют обертку или Dispatchers.Default.
         return queries.getNotifications().asFlow().mapToList(Dispatchers.Default)
     }
 
@@ -139,11 +204,10 @@ class LocalSource(database: RetailHubDatabase) {
         queries.markNotificationAsRead(id)
     }
 
-    fun clearNotifications() = queries.removeAllNotifications()
-
     fun clearAll() {
         queries.transaction {
             queries.removeAllRequests()
+            queries.clearRemoteKeys()
             queries.removeStore()
             queries.removeAllDepartments()
             queries.removeAllUsers()
@@ -152,17 +216,20 @@ class LocalSource(database: RetailHubDatabase) {
             queries.removeSession()
             queries.removeDevice()
         }
+        requestChanges.tryEmit(Unit)
     }
 
     fun clearAllExceptSession() {
         queries.transaction {
             queries.removeAllRequests()
+            queries.clearRemoteKeys()
             queries.removeStore()
             queries.removeAllDepartments()
             queries.removeAllUsers()
             queries.removeAllQrCodes()
             queries.removeAllNotifications()
         }
+        requestChanges.tryEmit(Unit)
     }
 
     // Session
@@ -184,9 +251,9 @@ class LocalSource(database: RetailHubDatabase) {
 
     // Device
     fun getDevice(): DeviceEntity? = queries.getDevice().executeAsOneOrNull()
-    
+
     fun saveDevice(id: String, fcmToken: String) = queries.saveDevice(id, fcmToken)
-    
+
     fun clearDevice() = queries.removeDevice()
 }
 

@@ -13,7 +13,6 @@ data class RequestsState(
     val currentUserFullName: String = "",
     val currentUserRole: String = "",
     val currentUserDepartmentIds: List<String> = emptyList(),
-    val showStartShiftDialog: Boolean = false,
     
     val showFilterDialog: Boolean = false,
     val filterStatus: RequestStatus? = null,

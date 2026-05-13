@@ -23,6 +23,7 @@ fun BaseListItem(
     subtitle: String? = null,
     statusText: String? = null,
     statusColor: Color = Color.Gray,
+    label: String? = null,
     onClick: () -> Unit = {}
 ) {
     Card(
@@ -44,21 +45,38 @@ fun BaseListItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                if (statusText != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(statusColor)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (label != null) {
                         Text(
-                            text = statusText,
-                            color = statusColor,
-                            style = MaterialTheme.typography.labelMedium
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
                         )
+	                    Spacer(modifier = Modifier.width(8.dp))
                     }
+
+                    if (statusText != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = statusText,
+                                color = statusColor,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        }
+                    }
+                }
+
+                if (label != null || statusText != null) {
                     Spacer(modifier = Modifier.height(4.dp))
                 }
                 
@@ -77,6 +95,8 @@ fun BaseListItem(
                 }
             }
             
+            Spacer(modifier = Modifier.width(8.dp))
+
             Icon(
                 imageVector = vectorResource(Res.drawable.ic_arrow),
                 contentDescription = null,

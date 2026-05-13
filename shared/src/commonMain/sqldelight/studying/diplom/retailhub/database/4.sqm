@@ -1,0 +1,37 @@
+-- Migration to add RequestRemoteKeys table and fix RequestEntity schema
+CREATE TABLE IF NOT EXISTS RequestRemoteKeys (
+    id TEXT NOT NULL PRIMARY KEY,
+    prevPage INTEGER AS kotlin.Int,
+    nextPage INTEGER AS kotlin.Int
+);
+
+-- Re-creating RequestEntity to include missing assignedUserId and ensure correct column order
+CREATE TABLE RequestEntity_new (
+    id TEXT NOT NULL PRIMARY KEY,
+    storeId TEXT NOT NULL,
+    departmentId TEXT NOT NULL,
+    departmentName TEXT NOT NULL,
+    isEscalated INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    assignedUserId TEXT,
+    assignedUserFirstName TEXT,
+    assignedUserLastName TEXT,
+    status TEXT NOT NULL,
+    clientSessionToken TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    assignedAt TEXT,
+    completedAt TEXT
+);
+
+INSERT INTO RequestEntity_new (
+    id, storeId, departmentId, departmentName, isEscalated,
+    assignedUserFirstName, assignedUserLastName, status,
+    clientSessionToken, createdAt, assignedAt, completedAt
+)
+SELECT
+    id, storeId, departmentId, departmentName, isEscalated,
+    assignedUserFirstName, assignedUserLastName, status,
+    clientSessionToken, createdAt, assignedAt, completedAt
+FROM RequestEntity;
+
+DROP TABLE RequestEntity;
+ALTER TABLE RequestEntity_new RENAME TO RequestEntity;

@@ -5,6 +5,7 @@ import studying.diplom.retailhub.data.mappers.toModel
 import studying.diplom.retailhub.domain.models.analytics.AnalyticsDashboardModel
 import studying.diplom.retailhub.domain.models.analytics.ConsultantDetailStatsModel
 import studying.diplom.retailhub.domain.models.analytics.ConsultantStatsModel
+import studying.diplom.retailhub.domain.models.analytics.Period
 import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.domain.repositories.AnalyticsRepository
 
@@ -12,8 +13,8 @@ class AnalyticsRepositoryImpl(
     private val remoteSource: RemoteSource
 ) : AnalyticsRepository {
 
-    override suspend fun getDashboard(): Result<AnalyticsDashboardModel> {
-        return remoteSource.getAnalyticsDashboard().map { it.toModel() }
+    override suspend fun getDashboard(period: Period): Result<AnalyticsDashboardModel> {
+        return remoteSource.getAnalyticsDashboard(period.name).map { it.toModel() }
     }
 
     override suspend fun getConsultantsStats(

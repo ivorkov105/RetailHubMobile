@@ -77,7 +77,7 @@ interface ApiClient {
     suspend fun deleteDevice(deviceId: String): Result<Unit>
 
     //Аналитика
-    suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity>
+    suspend fun getAnalyticsDashboard(period: String): Result<AnalyticsDashboardEntity>
     suspend fun getConsultantsStats(
 		dateFrom: String,
 		dateTo: String

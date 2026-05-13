@@ -1,6 +1,8 @@
 package studying.diplom.retailhub.data.mappers
 
 import studying.diplom.retailhub.data.entities.request.AssignedRequestUserEntity
+import studying.diplom.retailhub.data.entities.request.RequestListEntity
+import studying.diplom.retailhub.domain.models.common.PagedListModel
 import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.data.entities.request.RequestEntity as ApiRequestEntity
 import studying.diplom.retailhub.database.RequestEntity as DbRequestEntity
@@ -20,6 +22,14 @@ fun ApiRequestEntity.toModel() = RequestModel(
 	createdAt = createdAt,
 	assignedAt = assignedAt.ifBlank { null },
 	completedAt = completedAt.ifBlank { null }
+)
+
+fun RequestListEntity.toModel() = PagedListModel(
+    items = content.map { it.toModel() },
+    page = page,
+    size = size,
+    totalElements = totalElements,
+    totalPages = totalPages
 )
 
 fun RequestModel.toApiEntity() = ApiRequestEntity(
@@ -46,6 +56,7 @@ fun ApiRequestEntity.toDbEntity() = DbRequestEntity(
 	departmentId = departmentId,
 	departmentName = departmentName,
 	isEscalated = isEscalated,
+	assignedUserId = assignedUser.id.ifBlank { null },
 	assignedUserFirstName = assignedUser.firstName.ifBlank { null },
 	assignedUserLastName = assignedUser.lastName.ifBlank { null },
 	status = status,
@@ -61,7 +72,7 @@ fun DbRequestEntity.toModel() = RequestModel(
 	departmentId = departmentId,
 	departmentName = departmentName,
 	isEscalated = isEscalated,
-    assignedUserId = null, // В текущей БД нет поля для ID, при необходимости нужно добавить миграцию
+    assignedUserId = assignedUserId,
 	assignedUserFirstName = assignedUserFirstName,
 	assignedUserLastName = assignedUserLastName,
 	status = DomainRequestStatus.valueOf(status),
@@ -77,6 +88,7 @@ fun RequestModel.toDbEntity() = DbRequestEntity(
 	departmentId = departmentId,
 	departmentName = departmentName,
 	isEscalated = isEscalated,
+	assignedUserId = assignedUserId,
 	assignedUserFirstName = assignedUserFirstName,
 	assignedUserLastName = assignedUserLastName,
 	status = status.name,

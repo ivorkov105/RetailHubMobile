@@ -8,8 +8,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.LocalSource
+import studying.diplom.retailhub.domain.models.devices.DeviceModel
 import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.GetNotificationsUseCase
+import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.RegisterDeviceUseCase
+import studying.diplom.retailhub.domain.utils.PushTokenProvider
 import studying.diplom.retailhub.presentation.main.employees.employees_list.EmployeesTab
 import studying.diplom.retailhub.presentation.main.requests.RequestsTab
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
@@ -17,7 +21,9 @@ import studying.diplom.retailhub.presentation.main.utils.UserRoles
 class MainViewModel(
     private val userRole: String? = null,
     private val localSource: LocalSource,
-    private val getNotificationsUseCase: GetNotificationsUseCase
+    private val getNotificationsUseCase: GetNotificationsUseCase,
+    private val registerDeviceUseCase: RegisterDeviceUseCase,
+    private val pushTokenProvider: PushTokenProvider
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(
@@ -28,17 +34,32 @@ class MainViewModel(
     val state: StateFlow<MainState> = _state.asStateFlow()
 
     init {
-        observeNotifications()
+		registerDevice()
     }
 
-    private fun observeNotifications() {
-        getNotificationsUseCase()
-            .onEach { notifications ->
-                val hasUnread = notifications.any { it.isRead }
-                _state.update { it.copy(hasUnreadNotifications = hasUnread) }
-            }
-            .launchIn(screenModelScope)
-    }
+	private fun registerDevice() {
+		screenModelScope.launch {
+			val token = pushTokenProvider.getPushToken()
+			if (token != null) {
+				registerDeviceUseCase(
+					DeviceModel(
+						fcmToken = token,
+						deviceInfo = pushTokenProvider.getDeviceInfo()
+					)
+				)
+			}
+			observeNotifications()
+		}
+	}
+
+	private fun observeNotifications() {
+		getNotificationsUseCase()
+			.onEach { notifications ->
+				val hasUnread = notifications.any { !it.isRead }
+				_state.update { it.copy(hasUnreadNotifications = hasUnread) }
+			}
+			.launchIn(screenModelScope)
+	}
 
     fun onEvent(event: MainEvent) {
         when (event) {

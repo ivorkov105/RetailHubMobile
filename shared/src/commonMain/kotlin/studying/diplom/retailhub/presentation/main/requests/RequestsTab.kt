@@ -2,17 +2,19 @@ package studying.diplom.retailhub.presentation.main.requests
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.compose.collectAsLazyPagingItems
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.jetbrains.compose.resources.painterResource
+import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.domain.models.request.RequestStatus
 import studying.diplom.retailhub.presentation.main.components.RequestsFilterDialog
 import studying.diplom.retailhub.presentation.main.requests.components.RequestsListItem
@@ -32,46 +34,100 @@ object RequestsTab : Tab {
     override fun Content() {
         val screenModel: RequestsViewModel = koinScreenModel()
         val state by screenModel.state.collectAsState()
+        val pagedRequests = screenModel.requestsPagingData.collectAsLazyPagingItems()
         val listState = rememberLazyListState()
 
         Box(modifier = Modifier.fillMaxSize()) {
-            if (state.isLoading && state.requests.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else if (state.requests.isEmpty() && !state.isLoading) {
-                Text(
-                    text = "Заявок не найдено",
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
-                ) {
-                    item { Box(modifier = Modifier.padding(top = 16.dp)) }
-
-                    items(state.requests, key = { it.id }) { request ->
-                        RequestsListItem(
-                            request = request,
-                            currentUserId = state.currentUserId,
-                            onButtonClick = { 
-                                val isAssignedToMe = request.assignedUserId != null &&
-                                    request.assignedUserId == state.currentUserId
-
-                                if (request.status == RequestStatus.ASSIGNED || (request.status == RequestStatus.ESCALATED && isAssignedToMe)) {
-                                    screenModel.onEvent(RequestsEvent.OnShowCompleteDialog(request))
-                                } else {
-                                    screenModel.onEvent(RequestsEvent.OnShowAcceptDialog(request))
-                                }
-                            },
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-
-                    item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
-                }
-                
-                if (state.isLoading) {
+            when {
+                pagedRequests.loadState.refresh is LoadState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                pagedRequests.itemCount == 0 && pagedRequests.loadState.refresh is LoadState.NotLoading -> {
+                    Text(
+                        text = "Заявок не найдено",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                pagedRequests.loadState.refresh is LoadState.Error -> {
+                    val errorState = pagedRequests.loadState.refresh as LoadState.Error
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = errorState.error.message ?: "Ошибка загрузки")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { pagedRequests.retry() }) {
+                            Text("Повторить")
+                        }
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)
+                    ) {
+                        item { Box(modifier = Modifier.padding(top = 16.dp)) }
+
+                        items(pagedRequests.itemCount) { index ->
+                            val request: RequestModel? = pagedRequests[index]
+                            request?.let { req ->
+                                RequestsListItem(
+                                    request = req,
+                                    currentUserId = state.currentUserId,
+                                    onButtonClick = { 
+                                        val isAssignedToMe = req.assignedUserId != null &&
+                                            req.assignedUserId == state.currentUserId
+
+                                        if (req.status == RequestStatus.ASSIGNED || (req.status == RequestStatus.ESCALATED && isAssignedToMe)) {
+                                            screenModel.onEvent(RequestsEvent.OnShowCompleteDialog(req))
+                                        } else {
+                                            screenModel.onEvent(RequestsEvent.OnShowAcceptDialog(req))
+                                        }
+                                    },
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        }
+
+                        if (pagedRequests.loadState.append is LoadState.Loading) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
+
+                        if (pagedRequests.loadState.append is LoadState.Error) {
+                            item {
+                                val errorState = pagedRequests.loadState.append as LoadState.Error
+                                Column(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = errorState.error.message ?: "Ошибка загрузки")
+                                    Button(onClick = { pagedRequests.retry() }) {
+                                        Text("Повторить")
+                                    }
+                                }
+                            }
+                        }
+
+                        item { Box(modifier = Modifier.padding(bottom = 16.dp)) }
+                    }
+                }
+            }
+
+            if (state.isLoading) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
             }
 
@@ -125,37 +181,14 @@ object RequestsTab : Tab {
                 )
             }
 
-            if (state.showStartShiftDialog) {
-                AlertDialog(
-                    onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) },
-                    title = { Text(text = "Смена не начата") },
-                    text = { Text(text = "Чтобы принимать заявки, необходимо начать смену. Начать сейчас?") },
-                    confirmButton = {
-                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnConfirmStartShift) }) {
-                            Text("Да")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissStartShiftDialog) }) {
-                            Text("Нет")
-                        }
-                    }
-                )
-            }
-
             state.error?.let { error ->
                 AlertDialog(
                     onDismissRequest = { screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) },
                     title = { Text(text = "Ошибка") },
                     text = { Text(text = error) },
                     confirmButton = {
-                        TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnRetryLoad) }) {
-                            Text("Повторить")
-                        }
-                    },
-                    dismissButton = {
                         TextButton(onClick = { screenModel.onEvent(RequestsEvent.OnDismissErrorDialog) }) {
-                            Text("Закрыть")
+                            Text("Ок")
                         }
                     }
                 )

@@ -4,6 +4,7 @@ CREATE TABLE RequestEntity (
     departmentId TEXT NOT NULL,
     departmentName TEXT NOT NULL,
     isEscalated INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    assignedUserId TEXT,
     assignedUserFirstName TEXT,
     assignedUserLastName TEXT,
     status TEXT NOT NULL,
@@ -11,6 +12,12 @@ CREATE TABLE RequestEntity (
     createdAt TEXT NOT NULL,
     assignedAt TEXT,
     completedAt TEXT
+);
+
+CREATE TABLE RequestRemoteKeys (
+    id TEXT NOT NULL PRIMARY KEY,
+    prevKey INTEGER AS kotlin.Int,
+    nextKey INTEGER AS kotlin.Int
 );
 
 CREATE TABLE StoreEntity (
@@ -99,7 +106,25 @@ getRequests:
 SELECT * FROM RequestEntity
 WHERE (:status = '' OR status = :status)
 AND (:departmentId = '' OR departmentId = :departmentId)
+AND (:dateFrom = '' OR createdAt >= :dateFrom)
+AND (:dateTo = '' OR createdAt <= :dateTo)
+ORDER BY createdAt DESC
 LIMIT :limit OFFSET :offset;
+
+getRequestsPaged:
+SELECT * FROM RequestEntity
+WHERE (:status = '' OR status = :status)
+AND (:departmentId = '' OR departmentId = :departmentId)
+AND (:dateFrom = '' OR createdAt >= :dateFrom)
+AND (:dateTo = '' OR createdAt <= :dateTo)
+ORDER BY createdAt DESC;
+
+countRequests:
+SELECT COUNT(*) FROM RequestEntity
+WHERE (:status = '' OR status = :status)
+AND (:departmentId = '' OR departmentId = :departmentId)
+AND (:dateFrom = '' OR createdAt >= :dateFrom)
+AND (:dateTo = '' OR createdAt <= :dateTo);
 
 insertRequest:
 INSERT OR REPLACE INTO RequestEntity(
@@ -108,6 +133,7 @@ INSERT OR REPLACE INTO RequestEntity(
     departmentId,
     departmentName,
     isEscalated,
+    assignedUserId,
     assignedUserFirstName,
     assignedUserLastName,
     status,
@@ -120,6 +146,17 @@ VALUES ?;
 
 removeAllRequests:
 DELETE FROM RequestEntity;
+
+-- Remote Keys
+getRemoteKey:
+SELECT * FROM RequestRemoteKeys WHERE id = ?;
+
+insertRemoteKeys:
+INSERT OR REPLACE INTO RequestRemoteKeys(id, prevKey, nextKey)
+VALUES ?;
+
+clearRemoteKeys:
+DELETE FROM RequestRemoteKeys;
 
 -- Store
 getStore:

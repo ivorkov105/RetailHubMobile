@@ -1,5 +1,10 @@
 package studying.diplom.retailhub.data.repositories
 
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import studying.diplom.retailhub.data.data_sources.LocalSource
@@ -8,7 +13,9 @@ import studying.diplom.retailhub.data.data_sources.api.WSService
 import studying.diplom.retailhub.data.mappers.toApiEntity
 import studying.diplom.retailhub.data.mappers.toDbEntity
 import studying.diplom.retailhub.data.mappers.toModel
+import studying.diplom.retailhub.data.paging.RequestRemoteMediator
 import studying.diplom.retailhub.domain.models.request.RequestModel
+import studying.diplom.retailhub.domain.models.request.RequestStatus
 import studying.diplom.retailhub.domain.repositories.RequestRepository
 
 class RequestRepositoryImpl(
@@ -24,7 +31,7 @@ class RequestRepositoryImpl(
 
 	override suspend fun assignRequest(requestId: String): Result<RequestModel> {
 		val remoteResult = remoteSource.assignRequest(requestId)
-		
+
 		return remoteResult.fold(
 			onSuccess = { apiEntity ->
 				localSource.addRequests(listOf(apiEntity.toDbEntity()))
@@ -36,7 +43,7 @@ class RequestRepositoryImpl(
 
 	override suspend fun completeRequest(requestId: String): Result<RequestModel> {
 		val remoteResult = remoteSource.completeRequest(requestId)
-		
+
 		return remoteResult.fold(
 			onSuccess = { apiEntity ->
 				localSource.addRequests(listOf(apiEntity.toDbEntity()))
@@ -58,6 +65,44 @@ class RequestRepositoryImpl(
             listEntity.content.map { it.toModel() }
         }
     }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getPagedRequests(
+        status: RequestStatus?,
+        departmentId: String?,
+        dateFrom: String?,
+        dateTo: String?
+    ): Flow<PagingData<RequestModel>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false,
+                initialLoadSize = 20
+            ),
+            remoteMediator = RequestRemoteMediator(
+	            remoteSource = remoteSource,
+	            localSource = localSource,
+	            status = status?.name,
+	            departmentId = departmentId,
+	            dateFrom = dateFrom,
+	            dateTo = dateTo
+            ),
+            pagingSourceFactory = { 
+                localSource.getRequestsPaged(
+                    status = status?.name ?: "",
+                    departmentId = departmentId ?: "",
+                    dateFrom = dateFrom ?: "",
+                    dateTo = dateTo ?: ""
+                )
+            }
+        ).flow.map { pagingData ->
+            pagingData.map { it.toModel() }
+        }
+    }
+
+	override suspend fun saveRequest(request: RequestModel) {
+		localSource.addRequests(listOf(request.toDbEntity()))
+	}
 
     override fun observeRequestUpdates(): Flow<RequestModel> {
         return wsService.requestUpdates.map { it.toModel() }

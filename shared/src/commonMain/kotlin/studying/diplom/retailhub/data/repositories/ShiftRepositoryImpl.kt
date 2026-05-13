@@ -9,4 +9,6 @@ class ShiftRepositoryImpl(
 ) : ShiftRepository {
     override suspend fun startShift(): Result<ShiftEntity> = remoteSource.startShift()
     override suspend fun endShift(): Result<ShiftEntity> = remoteSource.endShift()
+    override suspend fun getMyShifts(dateFrom: String, dateTo: String): Result<List<ShiftEntity>> =
+        remoteSource.getMyShifts(dateFrom, dateTo)
 }

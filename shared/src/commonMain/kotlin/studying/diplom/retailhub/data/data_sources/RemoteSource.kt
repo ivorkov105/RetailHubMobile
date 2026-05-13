@@ -173,8 +173,8 @@ class RemoteSource(
         return apiClient.deleteDevice(deviceId)
     }
 
-    override suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity> {
-        return apiClient.getAnalyticsDashboard()
+    override suspend fun getAnalyticsDashboard(period: String): Result<AnalyticsDashboardEntity> {
+        return apiClient.getAnalyticsDashboard(period)
     }
 
     override suspend fun getConsultantsStats(

@@ -48,7 +48,6 @@ class StompService(
 
 	private val isConnected = MutableStateFlow(false)
 
-	// Храним активные подписки: ID -> Destination
 	private val activeSubscriptions = mutableMapOf<String, String>()
 
 	private val _requestUpdates = MutableSharedFlow<RequestEntity>()

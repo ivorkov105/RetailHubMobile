@@ -28,6 +28,7 @@ import org.jetbrains.compose.resources.painterResource
 import studying.diplom.retailhub.presentation.main.components.BaseListItem
 import studying.diplom.retailhub.presentation.main.employees.employee.EmployeeScreen
 import studying.diplom.retailhub.presentation.main.utils.ScreenMode
+import studying.diplom.retailhub.presentation.main.utils.UserRoles
 import studying.diplom.retailhub.resources.Res
 import studying.diplom.retailhub.resources.ic_list
 
@@ -74,20 +75,27 @@ object EmployeesTab : Tab {
                 state.employees.filter { it.role == role.name }
             } ?: state.employees
             
-            if (filteredEmployees.isNotEmpty()) {
+            val sortedEmployees = filteredEmployees.sortedByDescending { it.role == UserRoles.MANAGER.name }
+
+            if (sortedEmployees.isNotEmpty()) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     LazyColumn(
                         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 0.dp)
                     ) {
-                        items(filteredEmployees) { employee ->
+                        items(sortedEmployees) { employee ->
                             val statusColor = when (employee.currentStatus) {
                                 "ACTIVE" -> Color(0xFF4CAF50)
                                 "BUSY" -> Color(0xFFF44336)
                                 else -> Color.Gray
                             }
+
+                            val isManager = employee.role == UserRoles.MANAGER.name
+                            val roleLabel = if (isManager) "Менеджер" else "Консультант"
+
                             BaseListItem(
                                 title = "${employee.firstName} ${employee.lastName}",
-                                statusText = employee.currentStatus,
+                                label = roleLabel,
+                                statusText = if (isManager) null else employee.currentStatus,
                                 statusColor = statusColor,
                                 onClick = { screenModel.onEvent(EmployeesListEvent.OnEmployeeClick(employee)) }
                             )

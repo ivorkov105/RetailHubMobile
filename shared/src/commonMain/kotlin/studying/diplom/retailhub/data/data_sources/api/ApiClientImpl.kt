@@ -123,10 +123,10 @@ class ApiClientImpl(
         size: Int
     ): Result<RequestListEntity> = runCatching {
         httpClient.get("requests") {
-			if (status != null) parameter("status", status)
-	        if (departmentId != null) parameter("department_id", departmentId)
-	        if (dateFrom != null) parameter("date_from", dateFrom)
-	        if (dateTo != null) parameter("date_to", dateTo)
+			parameter("status", status)
+	        parameter("department_id", departmentId)
+	        parameter("date_from", dateFrom)
+	        parameter("date_to", dateTo)
             parameter("page", page)
             parameter("size", size)
         }.handleResponse().body()
@@ -303,8 +303,10 @@ class ApiClientImpl(
 		httpClient.delete("devices/$deviceId").handleResponse()
 	}
 
-	override suspend fun getAnalyticsDashboard(): Result<AnalyticsDashboardEntity> = runCatching {
-		httpClient.get("analytics/dashboard").handleResponse().body()
+	override suspend fun getAnalyticsDashboard(period: String): Result<AnalyticsDashboardEntity> = runCatching {
+		httpClient.get("analytics/dashboard") {
+            parameter("period", period)
+        }.handleResponse().body()
 	}
 
 	override suspend fun getConsultantsStats(

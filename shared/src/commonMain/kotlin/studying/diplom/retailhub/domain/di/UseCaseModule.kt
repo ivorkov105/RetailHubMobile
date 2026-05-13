@@ -7,10 +7,9 @@ import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetConsult
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetRequestsHistoryUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.notifications_use_cases.*
-import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AddRequestsUseCase
-import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
-import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
+import studying.diplom.retailhub.domain.use_cases.requests_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.GetMyShiftsUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.*
 import studying.diplom.retailhub.domain.use_cases.user_use_cases.*
@@ -19,6 +18,8 @@ val useCaseModule = module {
 	factory { AddRequestsUseCase(get()) }
 	factory { AssignRequestUseCase(get()) }
 	factory { CompleteRequestUseCase(get()) }
+	factory { GetPagedRequestsUseCase(get()) }
+	factory { SaveRequestUseCase(get()) }
 
 	factory { AddStoreUseCase(get()) }
 	factory { GetMyStoreUseCase(get()) }
@@ -49,6 +50,7 @@ val useCaseModule = module {
 
 	factory { StartShiftUseCase(get()) }
 	factory { EndShiftUseCase(get()) }
+	factory { GetMyShiftsUseCase(get()) }
 
     factory { GetNotificationsUseCase(get()) }
     factory { RefreshNotificationsUseCase(get()) }

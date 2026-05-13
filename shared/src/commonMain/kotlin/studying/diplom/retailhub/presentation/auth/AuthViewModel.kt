@@ -18,8 +18,6 @@ import studying.diplom.retailhub.domain.utils.PushTokenProvider
 class AuthViewModel(
     private val loginUseCase: LoginUseCase,
     private val getProfileUseCase: GetProfileUseCase,
-    private val registerDeviceUseCase: RegisterDeviceUseCase,
-    private val pushTokenProvider: PushTokenProvider
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(AuthState())
@@ -60,9 +58,6 @@ class AuthViewModel(
                 password = currentState.password
             ).onSuccess {
                 getProfileUseCase().onSuccess { user ->
-                    // После успешного входа и получения профиля регистрируем устройство для пушей
-                    registerDevice()
-                    
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -95,20 +90,6 @@ class AuthViewModel(
                         error = message
                     )
                 }
-            }
-        }
-    }
-
-    private fun registerDevice() {
-        screenModelScope.launch {
-            val token = pushTokenProvider.getPushToken()
-            if (token != null) {
-                registerDeviceUseCase(
-                    DeviceModel(
-                        fcmToken = token,
-                        deviceInfo = pushTokenProvider.getDeviceInfo()
-                    )
-                )
             }
         }
     }

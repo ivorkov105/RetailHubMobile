@@ -17,10 +17,10 @@ import studying.diplom.retailhub.domain.models.user.UserModel
 import studying.diplom.retailhub.presentation.notifications.NotificationsViewModel
 
 val viewModelModule = module {
-	single { RequestsViewModel(get(), get(), get(), get(), get()) }
-	factory { AuthViewModel(get(), get(), get(), get()) }
-	factory { params -> MainViewModel(params.getOrNull(), get(), get()) }
-	factory { ProfileViewModel(get(), get(), get(), get(), get(), get(), get()) }
+	single { RequestsViewModel(get(), get(), get(), get(), get(), get()) }
+	factory { AuthViewModel(get(), get()) }
+	factory { params -> MainViewModel(params.getOrNull(), get(), get(), get(), get()) }
+	factory { ProfileViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
 	factory { params -> CreateStoreViewModel(get(), get(), params.getOrNull()) }
 	factory { MyStoreViewModel(get()) }
 	factory { params -> 

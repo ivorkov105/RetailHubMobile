@@ -63,10 +63,14 @@ kotlin {
             
             implementation(libs.multiplatform.settings)
             implementation(libs.sqldelight.coroutines)
+            implementation(libs.sqldelight.paging)
 
             implementation(libs.vico.core)
             implementation(libs.vico.compose)
             implementation(libs.vico.compose.m3)
+
+            implementation(libs.paging.runtime)
+            implementation(libs.paging.compose)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

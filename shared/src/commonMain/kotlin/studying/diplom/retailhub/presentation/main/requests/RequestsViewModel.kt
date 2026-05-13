@@ -1,34 +1,79 @@
 package studying.diplom.retailhub.presentation.main.requests
 
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.filter
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import studying.diplom.retailhub.data.data_sources.api.ApiException
+import studying.diplom.retailhub.domain.models.request.RequestModel
 import studying.diplom.retailhub.domain.models.request.RequestStatus
 import studying.diplom.retailhub.domain.repositories.RequestRepository
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.AssignRequestUseCase
 import studying.diplom.retailhub.domain.use_cases.requests_use_cases.CompleteRequestUseCase
-import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.requests_use_cases.GetPagedRequestsUseCase
+import studying.diplom.retailhub.domain.use_cases.requests_use_cases.SaveRequestUseCase
 import studying.diplom.retailhub.presentation.main.utils.UserRoles
 
 class RequestsViewModel(
 	private val assignRequestUseCase: AssignRequestUseCase,
 	private val completeRequestUseCase: CompleteRequestUseCase,
 	private val getProfileUseCase: GetProfileUseCase,
-	private val startShiftUseCase: StartShiftUseCase,
+	private val getPagedRequestsUseCase: GetPagedRequestsUseCase,
+	private val saveRequestUseCase: SaveRequestUseCase,
 	private val requestRepository: RequestRepository
 ) : ScreenModel {
 
 	private val _state = MutableStateFlow(RequestsState())
 	val state: StateFlow<RequestsState> = _state.asStateFlow()
+
+	@OptIn(ExperimentalCoroutinesApi::class)
+	val requestsPagingData: Flow<PagingData<RequestModel>> = combine(
+		_state.map { it.filterStatus }.distinctUntilChanged(),
+		_state.map { it.filterDepartmentId }.distinctUntilChanged(),
+		_state.map { it.filterDateFrom }.distinctUntilChanged(),
+		_state.map { it.filterDateTo }.distinctUntilChanged(),
+	) { status: RequestStatus?, deptId: String, dateFrom: String?, dateTo: String? ->
+		FilterParams(status, deptId, dateFrom, dateTo)
+	}.flatMapLatest { params: FilterParams ->
+		getPagedRequestsUseCase(
+			status = params.status,
+			departmentId = params.deptId.ifBlank { null },
+			dateFrom = params.dateFrom,
+			dateTo = params.dateTo
+		).map { pagingData: PagingData<RequestModel> ->
+			val currentState = _state.value
+			val isConsultant = currentState.currentUserRole == UserRoles.CONSULTANT.name
+			val allowedStatuses = setOf(RequestStatus.WAITING, RequestStatus.ESCALATED, RequestStatus.ASSIGNED)
+
+			pagingData.filter { request: RequestModel ->
+				val matchesStatus = request.status in allowedStatuses
+				val matchesAssignment = request.assignedUserId == null || request.assignedUserId == currentState.currentUserId
+				val matchesUserDept = !isConsultant || request.departmentId in currentState.currentUserDepartmentIds
+				matchesStatus && matchesAssignment && matchesUserDept
+			}
+		}
+	}.cachedIn(screenModelScope)
+
+	private data class FilterParams(
+		val status: RequestStatus?,
+		val deptId: String,
+		val dateFrom: String?,
+		val dateTo: String?
+	)
 
 	private var lastStoreId: String? = null
 	private var lastDeptIds: List<String> = emptyList()
@@ -42,26 +87,25 @@ class RequestsViewModel(
 		screenModelScope.launch {
 			_state.update { it.copy(isLoading = true, error = null) }
 			getProfileUseCase().onSuccess { user ->
-				_state.update {
-					it.copy(
+				_state.update { state ->
+					state.copy(
 						currentUserId = user.id,
 						currentUserFullName = "${user.firstName} ${user.lastName}",
 						currentUserRole = user.role,
-						currentUserDepartmentIds = user.departments.map { it.id }
+						currentUserDepartmentIds = user.departments.map { dept -> dept.id },
+						isLoading = false
 					)
 				}
 
-				loadRequests().onSuccess {
-					requestRepository.connectToWebSocket()
+				requestRepository.connectToWebSocket()
 
-					if (user.role == UserRoles.MANAGER.name) {
-						lastStoreId = user.storeId
-						requestRepository.subscribeToStore(user.storeId)
-					} else if (user.role == UserRoles.CONSULTANT.name) {
-						lastDeptIds = user.departments.map { it.id }
-						user.departments.forEach { dept ->
-							requestRepository.subscribeToDepartment(dept.id)
-						}
+				if (user.role == UserRoles.MANAGER.name) {
+					lastStoreId = user.storeId
+					requestRepository.subscribeToStore(user.storeId)
+				} else if (user.role == UserRoles.CONSULTANT.name) {
+					lastDeptIds = user.departments.map { it.id }
+					user.departments.forEach { dept ->
+						requestRepository.subscribeToDepartment(dept.id)
 					}
 				}
 			}.onFailure { throwable ->
@@ -70,67 +114,10 @@ class RequestsViewModel(
 		}
 	}
 
-	private suspend fun loadRequests(): Result<Unit> {
-		val currentState = _state.value
-		val requests = requestRepository.getRequests(
-			status = currentState.filterStatus?.name,
-			departmentId = currentState.filterDepartmentId.ifBlank { null },
-			dateFrom = currentState.filterDateFrom,
-			dateTo = currentState.filterDateTo
-		)
-
-		return requests.fold(
-			onSuccess = { fetchedRequests ->
-				var filtered = if (currentState.filterStatus == null) {
-					fetchedRequests.filter { it.status != RequestStatus.COMPLETED && it.status != RequestStatus.CANCELED }
-				} else {
-					fetchedRequests
-				}
-
-				if (currentState.currentUserRole == UserRoles.CONSULTANT.name) {
-					filtered = filtered.filter { it.departmentId in currentState.currentUserDepartmentIds }
-				}
-
-				_state.update { it.copy(requests = filtered, isLoading = false) }
-				Result.success(Unit)
-			},
-			onFailure = { throwable ->
-				_state.update { it.copy(isLoading = false, error = throwable.message ?: "Ошибка загрузки списка заявок") }
-				Result.failure(throwable)
-			}
-		)
-	}
-
 	private fun observeWebSocketUpdates() {
 		requestRepository.observeRequestUpdates()
-			.onEach { updatedRequest ->
-				_state.update { state ->
-					val newList = state.requests.toMutableList()
-					val index = newList.indexOfFirst { it.id == updatedRequest.id }
-
-					val matchesStatus = when {
-						state.filterStatus != null -> updatedRequest.status == state.filterStatus
-						else -> updatedRequest.status != RequestStatus.COMPLETED && updatedRequest.status != RequestStatus.CANCELED
-					}
-					val matchesDept = state.filterDepartmentId.isBlank() || updatedRequest.departmentId == state.filterDepartmentId
-					val matchesUserDept = state.currentUserRole != UserRoles.CONSULTANT.name ||
-							updatedRequest.departmentId in state.currentUserDepartmentIds
-
-					val matchesFilters = matchesStatus && matchesDept && matchesUserDept
-
-					if (index != -1) {
-						if (matchesFilters) {
-							newList[index] = updatedRequest
-						} else {
-							newList.removeAt(index)
-						}
-					} else {
-						if (matchesFilters) {
-							newList.add(0, updatedRequest)
-						}
-					}
-					state.copy(requests = newList)
-				}
+			.onEach { request ->
+				saveRequestUseCase(request)
 			}
 			.launchIn(screenModelScope)
 	}
@@ -160,12 +147,6 @@ class RequestsViewModel(
 				_state.update { it.copy(error = null) }
 			}
 
-			is RequestsEvent.OnConfirmStartShift       -> startShift()
-
-			is RequestsEvent.OnDismissStartShiftDialog -> {
-				_state.update { it.copy(showStartShiftDialog = false) }
-			}
-
 			is RequestsEvent.OnRetryLoad               -> loadProfile()
 
 			RequestsEvent.OnToggleFilterDialog -> {
@@ -184,10 +165,7 @@ class RequestsViewModel(
 				_state.update { it.copy(filterDateTo = event.date) }
 			}
 			RequestsEvent.OnApplyFilters -> {
-				_state.update { it.copy(showFilterDialog = false, isLoading = true) }
-				screenModelScope.launch {
-					loadRequests()
-				}
+				_state.update { it.copy(showFilterDialog = false) }
 			}
 			RequestsEvent.OnClearFilters -> {
 				_state.update {
@@ -196,12 +174,8 @@ class RequestsViewModel(
 						filterDepartmentId = "",
 						filterDateFrom = null,
 						filterDateTo = null,
-						showFilterDialog = false,
-						isLoading = true
+						showFilterDialog = false
 					)
-				}
-				screenModelScope.launch {
-					loadRequests()
 				}
 			}
 		}
@@ -213,30 +187,10 @@ class RequestsViewModel(
 			assignRequestUseCase(requestId).onSuccess {
 				_state.update { it.copy(isLoading = false) }
 			}.onFailure { throwable ->
-				if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
-					_state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
-				} else {
-					_state.update {
-						it.copy(
-							isLoading = false,
-							error = throwable.message ?: "Не удалось принять заявку"
-						)
-					}
-				}
-			}
-		}
-	}
-
-	private fun startShift() {
-		_state.update { it.copy(showStartShiftDialog = false, isLoading = true) }
-		screenModelScope.launch {
-			startShiftUseCase().onSuccess {
-				_state.update { it.copy(isLoading = false) }
-			}.onFailure { throwable ->
 				_state.update {
 					it.copy(
 						isLoading = false,
-						error = throwable.message ?: "Не удалось начать смену"
+						error = throwable.message ?: "Не удалось принять заявку"
 					)
 				}
 			}
@@ -249,15 +203,11 @@ class RequestsViewModel(
 			completeRequestUseCase(requestId).onSuccess {
 				_state.update { it.copy(isLoading = false) }
 			}.onFailure { throwable ->
-				if (throwable is ApiException && (throwable.statusCode == HttpStatusCode.BadRequest || throwable.statusCode == HttpStatusCode.PreconditionFailed)) {
-					_state.update { it.copy(isLoading = false, showStartShiftDialog = true) }
-				} else {
-					_state.update {
-						it.copy(
-							isLoading = false,
-							error = throwable.message ?: "Не удалось завершить заявку"
-						)
-					}
+				_state.update {
+					it.copy(
+						isLoading = false,
+						error = throwable.message ?: "Не удалось завершить заявку"
+					)
 				}
 			}
 		}

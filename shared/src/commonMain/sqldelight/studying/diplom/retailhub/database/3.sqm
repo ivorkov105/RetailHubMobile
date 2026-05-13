@@ -1,0 +1,46 @@
+-- Migration to fix missing tables and schema inconsistencies
+CREATE TABLE IF NOT EXISTS DeviceEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    fcmToken TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS SessionEntity (
+    id INTEGER PRIMARY KEY CHECK (id = 0),
+    accessToken TEXT NOT NULL,
+    refreshToken TEXT NOT NULL,
+    userRole TEXT
+);
+
+CREATE TABLE IF NOT EXISTS AnalyticsDashboardTable (
+    totalRequestsToday INTEGER AS kotlin.Int NOT NULL,
+    completedRequestsToday INTEGER AS kotlin.Int NOT NULL,
+    activeConsultants INTEGER AS kotlin.Int NOT NULL,
+    avgReactionTimeSeconds REAL AS kotlin.Double NOT NULL,
+    avgServiceTimeSeconds REAL AS kotlin.Double NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ConsultantStatsTable (
+    userId TEXT NOT NULL PRIMARY KEY,
+    firstName TEXT NOT NULL,
+    lastName TEXT NOT NULL,
+    totalRequests INTEGER AS kotlin.Int NOT NULL,
+    completedRequests INTEGER AS kotlin.Int NOT NULL,
+    avgReactionSeconds REAL AS kotlin.Double NOT NULL,
+    avgServiceSeconds REAL AS kotlin.Double NOT NULL,
+    totalWorkMinutes INTEGER AS kotlin.Int NOT NULL,
+    totalBusyMinutes INTEGER AS kotlin.Int NOT NULL,
+    totalIdleMinutes INTEGER AS kotlin.Int NOT NULL
+);
+
+-- Fix QrCodeEntity schema if it was created with wrong columns in 2.sqm
+DROP TABLE IF EXISTS QrCodeEntity;
+CREATE TABLE QrCodeEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    departmentId TEXT NOT NULL,
+    departmentName TEXT NOT NULL,
+    token TEXT NOT NULL,
+    scanUrl TEXT NOT NULL,
+    label TEXT NOT NULL,
+    isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL
+);

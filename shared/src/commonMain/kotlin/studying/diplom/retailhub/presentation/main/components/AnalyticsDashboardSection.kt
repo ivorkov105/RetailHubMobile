@@ -10,31 +10,45 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import studying.diplom.retailhub.domain.models.analytics.AnalyticsDashboardModel
 import studying.diplom.retailhub.domain.models.analytics.AnalyticsMetric
+import studying.diplom.retailhub.domain.models.analytics.Period
 
 @Composable
 fun AnalyticsDashboardSection(
-    dashboard: AnalyticsDashboardModel,
-    modifier: Modifier = Modifier
+	dashboard: AnalyticsDashboardModel,
+	selectedPeriod: Period,
+	onPeriodSelected: (Period) -> Unit,
+	modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Аналитика за сегодня",
+            text = "Аналитика",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
 
-        // График сравнения заявок
-        AnalyticsChart(
-            metric = AnalyticsMetric.TOTAL_REQUESTS,
-            data = listOf(
-                "Всего" to dashboard.totalRequestsToday.toDouble(),
-                "Выполнено" to dashboard.completedRequestsToday.toDouble()
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
+	    PeriodSelector(
+	        selectedPeriod = selectedPeriod,
+	        onPeriodSelected = onPeriodSelected
+		)
+
+	    Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            MetricCard(
+                modifier = Modifier.weight(1f),
+                metric = AnalyticsMetric.TOTAL_REQUESTS,
+                value = dashboard.totalRequestsToday.toString()
+            )
+            MetricCard(
+                modifier = Modifier.weight(1f),
+                metric = AnalyticsMetric.COMPLETED_REQUESTS,
+                value = dashboard.completedRequestsToday.toString()
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -59,33 +73,5 @@ fun AnalyticsDashboardSection(
             metric = AnalyticsMetric.ACTIVE_CONSULTANTS,
             value = dashboard.activeConsultants.toString()
         )
-    }
-}
-
-@Composable
-private fun MetricCard(
-    metric: AnalyticsMetric,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = metric.label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF00A3FF)
-            )
-        }
     }
 }

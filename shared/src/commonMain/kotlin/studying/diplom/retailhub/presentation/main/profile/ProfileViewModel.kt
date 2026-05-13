@@ -12,11 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import studying.diplom.retailhub.data.data_sources.api.ApiException
+import studying.diplom.retailhub.domain.models.analytics.Period
 import studying.diplom.retailhub.domain.models.shop.StoreModel
 import studying.diplom.retailhub.domain.use_cases.analytics_use_cases.GetAnalyticsDashboardUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.GetProfileUseCase
 import studying.diplom.retailhub.domain.use_cases.auth_use_cases.LogoutUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.EndShiftUseCase
+import studying.diplom.retailhub.domain.use_cases.shift_use_cases.GetMyShiftsUseCase
 import studying.diplom.retailhub.domain.use_cases.shift_use_cases.StartShiftUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetDepartmentsUseCase
 import studying.diplom.retailhub.domain.use_cases.store_use_cases.GetMyStoreUseCase
@@ -41,7 +43,8 @@ class ProfileViewModel(
 	private val logoutUseCase: LogoutUseCase,
 	private val startShiftUseCase: StartShiftUseCase,
 	private val endShiftUseCase: EndShiftUseCase,
-	private val getAnalyticsDashboardUseCase: GetAnalyticsDashboardUseCase
+	private val getAnalyticsDashboardUseCase: GetAnalyticsDashboardUseCase,
+	private val getMyShiftsUseCase: GetMyShiftsUseCase
 ) : ScreenModel {
 
 	private val _state = MutableStateFlow(ProfileState())
@@ -101,6 +104,23 @@ class ProfileViewModel(
 
 			ProfileEvent.OnStartShiftClick       -> startShift()
 			ProfileEvent.OnEndShiftClick         -> endShift()
+
+			is ProfileEvent.OnDateFromChange     -> {
+				_state.update { it.copy(dateFrom = event.date) }
+				loadShifts()
+			}
+
+			is ProfileEvent.OnDateToChange       -> {
+				_state.update { it.copy(dateTo = event.date) }
+				loadShifts()
+			}
+
+			ProfileEvent.LoadShifts              -> loadShifts()
+
+            is ProfileEvent.OnPeriodChange -> {
+                _state.update { it.copy(selectedPeriod = event.period) }
+                loadDashboard(event.period)
+            }
 		}
 	}
 
@@ -121,22 +141,46 @@ class ProfileViewModel(
 			}
 
 			val user = userResult.getOrNull()
-			var dashboardResult: Result<studying.diplom.retailhub.domain.models.analytics.AnalyticsDashboardModel>? = null
 			
-			if (user?.role?.uppercase() == UserRoles.MANAGER.name) {
-				dashboardResult = getAnalyticsDashboardUseCase()
-			}
-
 			_state.update {
 				it.copy(
 					user = user,
 					store = storeResult.getOrNull(),
 					allDepartments = departmentsResult.getOrNull() ?: emptyList(),
-					dashboard = dashboardResult?.getOrNull(),
-					analyticsError = dashboardResult?.exceptionOrNull()?.message,
 					isLoading = false,
 					error = userResult.exceptionOrNull()?.message ?: storeResult.exceptionOrNull()?.message
 				)
+			}
+
+            if (user?.role?.uppercase() == UserRoles.MANAGER.name) {
+                loadDashboard(_state.value.selectedPeriod)
+            } else if (user?.role?.uppercase() == UserRoles.CONSULTANT.name) {
+				loadShifts()
+			}
+		}
+	}
+
+    private fun loadDashboard(period: Period) {
+        screenModelScope.launch {
+            _state.update { it.copy(analyticsError = null) }
+            getAnalyticsDashboardUseCase(period).onSuccess { dashboard ->
+                _state.update { it.copy(dashboard = dashboard) }
+            }.onFailure { error ->
+                _state.update { it.copy(analyticsError = error.message) }
+            }
+        }
+    }
+
+	private fun loadShifts() {
+		val dateFrom = _state.value.dateFrom ?: return
+		val dateTo = _state.value.dateTo ?: return
+
+		screenModelScope.launch {
+			_state.update { it.copy(isShiftsLoading = true) }
+			getMyShiftsUseCase(dateFrom, dateTo).onSuccess { shifts ->
+				_state.update { it.copy(shifts = shifts, isShiftsLoading = false) }
+			}.onFailure { error ->
+				_state.update { it.copy(isShiftsLoading = false, error = error.message) }
 			}
 		}
 	}

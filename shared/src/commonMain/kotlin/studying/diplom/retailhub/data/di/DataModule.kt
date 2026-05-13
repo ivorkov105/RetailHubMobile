@@ -19,6 +19,7 @@ import studying.diplom.retailhub.data.repositories.StoreRepositoryImpl
 import studying.diplom.retailhub.data.repositories.UserRepositoryImpl
 import studying.diplom.retailhub.database.AnalyticsDashboardTable
 import studying.diplom.retailhub.database.ConsultantStatsTable
+import studying.diplom.retailhub.database.RequestRemoteKeys
 import studying.diplom.retailhub.database.RetailHubDatabase
 import studying.diplom.retailhub.domain.repositories.AnalyticsRepository
 import studying.diplom.retailhub.domain.repositories.AuthRepository
@@ -60,6 +61,10 @@ val dataModule = module {
 				totalWorkMinutesAdapter = intAdapter,
 				totalBusyMinutesAdapter = intAdapter,
 				totalIdleMinutesAdapter = intAdapter
+			),
+			RequestRemoteKeysAdapter = RequestRemoteKeys.Adapter(
+				prevKeyAdapter = intAdapter,
+				nextKeyAdapter = intAdapter
 			)
 		)
 	}
